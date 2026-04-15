@@ -1,0 +1,34 @@
+# Allowlist strategy: ignore everything, then explicitly permit the files
+# that make up the public workflow. Any new session data or cache written
+# by Claude Code in the future stays out of the repo by default.
+
+# --- Ignore everything by default ---
+*
+
+# --- Explicitly allow the public workflow files ---
+!.gitignore
+!README.md
+!LICENSE
+!CLAUDE.md
+!settings.json
+!mcp.json
+!statusline-command.sh
+!auto-sync.sh
+
+# Allow the skills directory and nested SKILL.md files
+!skills/
+!skills/*/
+!skills/*/SKILL.md
+!skills/**/references/
+!skills/**/references/*.md
+
+# --- Hard-block things that must never leak, even if the above allowlist
+# would otherwise include them ---
+CLAUDE.md.bak*
+*.bak
+*.bak-*
+settings.local.json
+session-env/
+sessions/
+history.jsonl
+.DS_Store

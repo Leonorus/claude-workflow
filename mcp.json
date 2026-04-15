@@ -1,0 +1,64 @@
+{
+  "mcpServers": {
+    "sequentialthinking": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "mcp/sequentialthinking"
+      ]
+    },
+    "context7": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "-e",
+        "CONTEXT7_API_KEY",
+        "-e",
+        "MCP_TRANSPORT=stdio",
+        "mcp/context7"
+      ]
+    },
+    "gitlab": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "-e",
+        "GITLAB_PERSONAL_ACCESS_TOKEN",
+        "-e",
+        "GITLAB_API_URL",
+        "zereight050/gitlab-mcp"
+      ]
+    },
+    "obsidian": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "-e",
+        "OBSIDIAN_HOST",
+        "-e",
+        "OBSIDIAN_API_KEY",
+        "mcp/obsidian"
+      ],
+      "env": {
+        "OBSIDIAN_HOST": "host.docker.internal"
+      }
+    },
+    "fetch": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "mcp/fetch"
+      ]
+    }
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh /Users/filipp.vysokov/.claude/auto-sync.sh",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=$(jq -r '.tool_response.filePath // .tool_input.file_path'); echo \"$f\" | grep -qE '\\.(yml|yaml)$' && echo \"$f\" | grep -qE '(roles/|playbooks/|tasks/|handlers/|defaults/|vars/|group_vars/|host_vars/|playbook|ansible)' && [ -f .venv/bin/ansible-lint ] && .venv/bin/ansible-lint \"$f\" 2>/dev/null || true",
+            "timeout": 60,
+            "statusMessage": "Running ansible-lint..."
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=$(jq -r '.tool_response.filePath // .tool_input.file_path'); echo \"$f\" | grep -qE '\\.(tf|tfvars)$' && terraform fmt \"$f\" 2>/dev/null || true",
+            "timeout": 30,
+            "statusMessage": "Running terraform fmt..."
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "sh /Users/filipp.vysokov/.claude/statusline-command.sh"
+  },
+  "enabledPlugins": {
+    "claude-md-management@claude-plugins-official": true,
+    "remember@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "claude-plugins-official": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-plugins-official"
+      }
+    }
+  }
+}
