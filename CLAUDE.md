@@ -67,7 +67,7 @@ Use `AGENTS.md` (not `CLAUDE.md`) for project-level instructions. Migrate any ex
 
 ---
 
-## MCP priority (only servers in `~/.claude/mcp.json`)
+## MCP priority (user-scope servers live in `~/.claude.json` under `mcpServers`; `~/.claude/mcp.json` is NOT read by Claude Code)
 - `sequentialthinking` — complex multi-step reasoning, architecture decisions
 - `context7` — docs/examples for unfamiliar libraries (call `resolve-library-id` first)
 - `gitlab` — all ops against `gitlab.tl-lan.ru`; prefer over `git` CLI for remote interactions
@@ -79,7 +79,7 @@ Host may inject additional MCPs (e.g. `github`, `dockerhub`, `filesystem`, `comp
 ---
 
 ## Security
-- Never commit secrets. `OBSIDIAN_API_KEY` lives in shell env / `~/.claude/session-env/`, not in `mcp.json`.
+- Never commit secrets. `OBSIDIAN_API_KEY` lives in shell env (`~/.zshrc`), not in `~/.claude.json`.
 - Refuse destructive ops (`git reset --hard`, force push, `rm -rf` on unknown state) without explicit user confirmation.
 
 ---
