@@ -67,7 +67,7 @@ The `classify-task` skill is invoked first on every request and picks the bucket
 
 Before implementing an Ops/Infra or Debug approach, Claude searches **both** `Projects/<current-repo>/` and `Knowledge/` — the same problem may already be solved in another repo. When a pattern repeats across 2+ repos, it gets promoted from a project note to `Knowledge/<topic>.md` with relative cross-links back to the source projects. The `architecture-review` skill flags **promotion candidates** during its post-implementation pass.
 
-At the end of non-trivia tasks, Claude proposes a note (draft + target path); the user confirms before it's written. Never auto-write.
+At the end of non-trivia tasks, Claude asks "Take a note for this?" with a one-line summary + target path. On yes, the note is written automatically — no draft-review round-trip. Trivial tasks and duplicates are skipped without asking.
 
 ## Installation
 

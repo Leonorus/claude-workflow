@@ -49,7 +49,7 @@ If the architecture is fine, say so in one sentence.
 - Blocking findings → fix before marking the task done.
 - Suggestions → discuss with user; log non-adopted ones in Obsidian under `Projects/<repo>/<date>-arch-notes.md`.
 - Notes → optionally log in same place.
-- **Promotion candidates** → draft a `Knowledge/<topic>.md` entry that extracts the shared pattern; show the user the draft + target path; write on confirm. Cross-link the source repos by relative path.
+- **Promotion candidates** → ask the user: "Promote to `Knowledge/<topic>.md`?" with a one-line summary of the extracted pattern + target path. On yes, auto-write with cross-links to the source repos by relative path.
 
 ## Anti-patterns
 - Running architecture review before code review (wastes time if correctness is broken).

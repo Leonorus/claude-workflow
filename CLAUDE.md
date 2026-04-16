@@ -13,10 +13,10 @@ Invoke the `classify-task` skill. Its verdict determines the bucket, workflow, a
 
 **Cross-cutting (applies to every non-trivia bucket):**
 - **After implementation:** invoke `update-project-docs` to update `AGENTS.md` and affected in-repo docs.
-- **At end of task:** propose an Obsidian note. Pick path:
+- **At end of task:** decide if a note is worth keeping. Ask the user: "Take a note for this?" with a one-line summary + target path. On yes, auto-write (no draft-review round-trip). Pick path:
   - Reusable pattern / architectural decision / cross-project → `Knowledge/<topic>.md`
   - Repo-specific plan or debug finding → `Projects/<repo>/YYYY-MM-DD-<slug>.md`
-  Draft the note, show the user the draft + target path, write on confirm. Don't auto-write.
+  If the task is trivial or a duplicate of an existing note, skip the ask.
 
 **Consult Obsidian for Ops/Infra and Debug.** SessionStart injects a vault index. Before proposing an approach, search **both** `Projects/<current-repo>/` **and** `Knowledge/` — the same problem may be solved in another repo. Use direct keyword overlap (component names, hostnames, error strings); never cite tangentially-related notes. Confirm with `mcp__obsidian__obsidian_simple_search`, read with `mcp__obsidian__obsidian_get_file_contents`.
 
