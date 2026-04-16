@@ -13,7 +13,7 @@ First move on any request. Decides how much process to apply, and threads the us
 |---|---|---|
 | **Trivia** | typo, one-char rename, single-line config tweak, obvious doc fix | Just do it. No brainstorm, no plan, no arch review, no doc update. |
 | **Light Ops** | Ansible/Terraform/k8s/CI/Docker change that is: single file, <~50 diff lines, no prod-boundary touch, no new role/module/stack, no architectural shift | Edit → lint → (dry-run only if touching prod vars/state) → commit → offer MR. No brainstorm, no arch review. Surface insights if noticed. |
-| **Heavy Ops** | Ops change with any of: multi-file, prod-boundary touch (prod vars, live cluster, secrets, network/security rules), new role/module/stack, architectural shift, or same pattern exists in 2+ repos | Deep-dive: brainstorm → Obsidian check (`Knowledge/` + `Projects/`) → writing-plans → implement → lint/validate → **mandatory dry-run gate** → architecture-review → apply → commit → MR → update-project-docs → propose Obsidian note. |
+| **Heavy Ops** | Ops change with any of: multi-file, prod-boundary touch (prod vars, live cluster, secrets, network/security rules), new role/module/stack, architectural shift, or same pattern exists in 2+ repos | Deep-dive: brainstorm → Obsidian check (`Knowledge/` + `Projects/`) → writing-plans → implement → lint/validate → **mandatory dry-run gate** → architecture-review → apply → commit → MR → update-project-docs → propose Obsidian note. **Fan out read-only leaves to subagents (see section below).** |
 | **Go / Python app code** | project has `go.mod` or `pyproject.toml`, has `tests/` or `_test.go`, multiple packages/modules | Full app pipeline: brainstorm → writing-plans → **TDD** (red-green-refactor) → requesting-code-review → architecture-review → verification-before-completion → update-project-docs. |
 | **Go / Python script** | single file, <~100 lines, glue/automation, no tests dir, run-once or cron | Short plan if non-trivial. No TDD — manual smoke test. Arch review if it's not one-off. update-project-docs. |
 | **Debug** | bug report, test failure, stack trace provided, "why is X broken", unexpected behavior | `systematic-debugging`: hypothesis → minimal repro → instrument → targeted fix → verify. No speculative fixes. If a fix ships: arch-review + verify + update-project-docs. Investigation-only: findings go to Obsidian (`Knowledge/` if reusable, else `Projects/<repo>/`). |
@@ -51,6 +51,35 @@ The user values insights over pure execution. At each natural step boundary (aft
 - **Cross-repo unification** ("This NGINX config pattern also lives in `infra-edge/` — worth promoting to `Knowledge/nginx-tls-offload.md`?").
 
 Format: one short paragraph per insight. What matters is clarity. Do **not** implement insights silently — propose, wait for direction. Do not list insights the user would already know; only what would genuinely inform their decision.
+
+## Subagent fan-out — read, don't write (Heavy Ops and App code)
+
+**Rule:** fan out any step that *reads without writing*, join in main. Sequential, feedback-heavy, user-interactive, and destructive steps stay in the main agent.
+
+**Fan out** (parallel subagents, one message with multiple `Agent` tool calls):
+- **Obsidian consult** — one subagent per vault path to search (`Projects/<current-repo>/`, `Knowledge/<topic>*`).
+- **Library / docs lookup** — `mcp__context7` and `mcp__fetch` queries for unfamiliar libraries, CVEs, upstream release notes.
+- **Inventory / reference scan** — "find all call sites of X", "list every role that implements pattern Y", "grep for deprecated flag Z across the repo".
+- **Per-file lint / validate when files are independent** — e.g., `ansible-lint` on 5 unrelated roles, `terraform validate` in 3 separate modules.
+- **Architecture review** — already dispatches a subagent by the skill's own design; this rule just makes it explicit.
+
+**Stay in main agent** (do not fan out):
+- **Brainstorm, plan writing** — user feedback loop; insights emerge from the whole picture.
+- **Implementation (edits)** — needs surgical continuity, lives in `surgical-changes` discipline.
+- **Mandatory dry-run gate** — blocking, requires user OK.
+- **Apply / commit / MR** — sequential, destructive, user-facing.
+- **update-project-docs synthesis** — integrates across all the diffs.
+- **Obsidian note write** — requires the user "take a note?" answer first.
+
+**Join pattern:** each subagent returns a short structured report (≤200 words, explicit "found / not found", citation paths). Main agent integrates reports before the next sequential step. If two subagent reports conflict, main agent decides — don't delegate the tie-break.
+
+**Skills to invoke for the pattern:** `superpowers:dispatching-parallel-agents` (for the one-message-multiple-`Agent`-calls pattern), `superpowers:subagent-driven-development` (when a plan has multiple independent implementation leaves that can run in parallel sessions).
+
+**Anti-patterns**:
+- Fanning out sequential work "just because you can" — three subagents for a top-down feature implementation creates integration debt worse than the latency you saved.
+- Fanning out work that needs user feedback — the subagent can't ask the user mid-flight.
+- Spawning a subagent for a one-line grep — orchestration overhead exceeds the work.
+- Forgetting to join — if two subagents return conflicting findings, the main agent must reconcile before proceeding.
 
 ## Cross-cutting (all buckets except Trivia and pure Research)
 

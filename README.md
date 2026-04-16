@@ -50,6 +50,15 @@ This repo is the minimum-viable reset: a short `CLAUDE.md` with priority order a
 
 The `classify-task` skill is invoked first on every request and picks the bucket out loud. It also defines **escalation rules** (a Light Ops fix pauses and offers promotion to Heavy Ops when the same pattern exists in 2+ repos, when the diff grows past ~50 lines, or when a one-line change turns out to patch around a deeper design issue) and threads **insights** — better approach, best-practice drift, simplification, cross-repo unification — into every non-trivia step boundary.
 
+## Subagent fan-out (Heavy Ops / app code)
+
+**Rule: fan out any step that reads without writing, join in main.** Context isolation sharpens precision on big tasks — but only when the fan-out targets are genuinely independent.
+
+- **Fan out** (parallel subagents via `superpowers:dispatching-parallel-agents`): Obsidian `Projects/<repo>/` + `Knowledge/` searches, `context7` / `fetch` docs lookups, inventory scans ("all call sites of X", "every role implementing pattern Y"), per-file lint on independent modules, architecture review (already a subagent by design).
+- **Stay in main**: brainstorm, plan writing, editing, the mandatory dry-run gate, apply/commit/MR, doc synthesis, Obsidian note writes. Sequential, feedback-heavy, or destructive steps don't benefit from fan-out.
+
+Each subagent returns a short structured report; main integrates before the next sequential step. Conflicts get resolved in main, not by delegation.
+
 ## Four always-on principles
 
 1. **Think before coding** — surface assumptions, don't hide confusion, name tradeoffs.
