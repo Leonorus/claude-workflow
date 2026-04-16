@@ -51,8 +51,8 @@
   "permissions": {
     "allow": [
       "WebSearch",
-      "Bash(docker pull:*)",
-      "Bash(docker run:*)",
+      "Bash(docker pull *)",
+      "Bash(docker run *)",
       "Skill(update-config)",
 
       "mcp__github",
