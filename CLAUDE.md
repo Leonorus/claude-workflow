@@ -9,23 +9,16 @@
 ---
 
 ## First move on any task
-Classify the request into one of the buckets below and apply that weight. If you cannot classify confidently, **ask the user** before proceeding.
+Invoke the `classify-task` skill. Its verdict determines the bucket, workflow, and skills to run. The skill is the single source of truth for the taxonomy — don't re-describe it here.
 
-| Bucket | Signals | Weight |
-|---|---|---|
-| **Trivia** | typo, rename, one-line config tweak, obvious doc fix | Just do it. No workflow, no arch review. |
-| **Ops / Infra** | Ansible, Terraform, shell, k8s, CI, Dockerfile | Short plan if >1 file. No TDD. Dry-run / `--check` / `plan` before apply. Arch review. Doc update. |
-| **Go / Python app code** | `go.mod` or `pyproject.toml` present, has tests dir, real module | Full weight: brainstorm → plan → **TDD** → code review → arch review → verify → doc update. |
-| **Go / Python script** | single-file, glue/automation, <~100 lines | Short plan if non-trivial. No TDD (manual smoke test). Arch review. Doc update. |
-| **Debug** | bug report, test failure, stack trace, "why is X broken" | `systematic-debugging`: hypothesis → minimal repro → instrument → fix → verify. No speculative fixes. |
-| **Research** | "how does X work", "compare A vs B" — no bug, just learning | Read, investigate, report. No workflow weight. Write findings to Obsidian. |
-| **Ambiguous** | Can't confidently classify, spans buckets | **Ask the user** which bucket + scope first. |
+**Cross-cutting (applies to every non-trivia bucket):**
+- **After implementation:** invoke `update-project-docs` to update `AGENTS.md` and affected in-repo docs.
+- **At end of task:** propose an Obsidian note. Pick path:
+  - Reusable pattern / architectural decision / cross-project → `Knowledge/<topic>.md`
+  - Repo-specific plan or debug finding → `Projects/<repo>/YYYY-MM-DD-<slug>.md`
+  Draft the note, show the user the draft + target path, write on confirm. Don't auto-write.
 
-**Two cross-cutting rules:**
-- **After code/config change (non-trivia):** update `AGENTS.md` and affected docs in the repo.
-- **Plans, specs, research notes go to Obsidian**, not the repo.
-
-**Consult Obsidian for Ops/Infra and Debug buckets.** A vault index is injected at SessionStart. Before proposing fixes, scan the index for notes whose **path or tags share concrete keywords** with the request (component names, hostnames, error strings, services). Only if there's a direct match, call `mcp__obsidian__obsidian_simple_search` to confirm and read the note via `mcp__obsidian__obsidian_get_file_contents`. **Do NOT speculate that a tangentially-related incident may apply** — irrelevant context is worse than none. If unsure, do not include the note. Cite the note path only when its content directly addresses the request.
+**Consult Obsidian for Ops/Infra and Debug.** SessionStart injects a vault index. Before proposing an approach, search **both** `Projects/<current-repo>/` **and** `Knowledge/` — the same problem may be solved in another repo. Use direct keyword overlap (component names, hostnames, error strings); never cite tangentially-related notes. Confirm with `mcp__obsidian__obsidian_simple_search`, read with `mcp__obsidian__obsidian_get_file_contents`.
 
 ---
 
@@ -51,6 +44,14 @@ Vault at `~/Obsidian/Work/`:
 Prefer `mcp__obsidian__*` tools (`obsidian_append_content`, `obsidian_patch_content`, `obsidian_simple_search`) over raw Write/Read inside the vault. If Obsidian app isn't running, fall back to raw filesystem Write and tell the user — the vault is just markdown on disk.
 
 Never commit Obsidian vault paths to a repo. `~/Obsidian/` lives outside repos by design.
+
+### Obsidian as cross-project library
+Obsidian isn't a per-repo scratch pad — it's a shared library across all this user's work.
+- Architecturally linked projects may solve the same problem differently; use Obsidian to unify those designs.
+- When a pattern repeats across 2+ repos, promote the finding from a project note to `Knowledge/<topic>.md` and cross-link the source projects by relative path.
+- Prefer linking existing `Knowledge/` notes over duplicating content.
+- Before implementing an Ops/Infra or Debug approach, search `Knowledge/` — not just the current project's folder.
+- Insights welcome: if during any task you notice a pattern repeating, a design smell across repos, or an opportunity to unify — raise it to the user as a proposal, don't just execute in silence.
 
 ---
 

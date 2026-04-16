@@ -38,6 +38,7 @@ Look specifically for:
 7. For Ansible: role boundaries (one role doing multiple jobs), task/handler mix-up, vars leaking across roles.
 8. For Terraform: module granularity, inappropriate use of count/for_each, state-file scope.
 9. For Go/Python app: package cohesion, circular imports, test/code boundary.
+10. Cross-repo reuse — is any pattern introduced here already present in another repo the user maintains? If the subagent spots one, flag it as a **promotion candidate**: the pattern belongs in `~/Obsidian/Work/Knowledge/<topic>.md` with cross-links back to the source repos.
 
 Do NOT comment on correctness, style, or formatting — code review already covered that.
 Report each finding with: severity (blocking/suggestion/note), file:line, what, why it matters, concrete suggestion.
@@ -48,6 +49,7 @@ If the architecture is fine, say so in one sentence.
 - Blocking findings → fix before marking the task done.
 - Suggestions → discuss with user; log non-adopted ones in Obsidian under `Projects/<repo>/<date>-arch-notes.md`.
 - Notes → optionally log in same place.
+- **Promotion candidates** → draft a `Knowledge/<topic>.md` entry that extracts the shared pattern; show the user the draft + target path; write on confirm. Cross-link the source repos by relative path.
 
 ## Anti-patterns
 - Running architecture review before code review (wastes time if correctness is broken).
