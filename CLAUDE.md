@@ -25,6 +25,8 @@ Classify the request into one of the buckets below and apply that weight. If you
 - **After code/config change (non-trivia):** update `AGENTS.md` and affected docs in the repo.
 - **Plans, specs, research notes go to Obsidian**, not the repo.
 
+**Consult Obsidian for Ops/Infra and Debug buckets.** A vault index is injected at SessionStart (paths + tags from `~/Obsidian/Work/`). Before proposing fixes or runbooks, scan that index — if anything looks related, call `mcp__obsidian__obsidian_simple_search` with keywords from the request and read matching notes via `mcp__obsidian__obsidian_get_file_contents` *before* answering. Cite the note path when you use one.
+
 ---
 
 ## Four principles (always on)

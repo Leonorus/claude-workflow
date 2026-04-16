@@ -18,10 +18,12 @@ This repo is the minimum-viable reset: a short `CLAUDE.md` with priority order a
 ```
 .
 ├── CLAUDE.md                    User-level preferences, taxonomy, 4 principles, MCP priority
-├── settings.json                Plugin list, hooks (ansible-lint, terraform-fmt, auto-sync)
+├── settings.json                Plugin list, hooks (ansible-lint, terraform-fmt, auto-sync, obsidian-index)
 ├── mcp.json                     Docker-based MCP servers
 ├── statusline-command.sh        Custom status line (cwd, branch, context %, rate-limit %)
 ├── auto-sync.sh                 Stop-hook: commits and pushes tracked changes after each turn
+├── hooks/
+│   └── obsidian-index.sh        SessionStart-hook: emits ~/Obsidian/Work/ note index (paths + tags)
 ├── skills/
 │   ├── classify-task/           Runs first on every request, picks the bucket
 │   ├── think-before-coding/     Surface assumptions + tradeoffs before editing
