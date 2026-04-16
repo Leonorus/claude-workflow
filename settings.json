@@ -1,4 +1,36 @@
 {
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(docker pull *)",
+      "Bash(docker run *)",
+      "Skill(update-config)",
+      "mcp__github",
+      "mcp__obsidian",
+      "mcp__fetch",
+      "mcp__context7",
+      "mcp__sequentialthinking",
+      "mcp__gitlab__get_*",
+      "mcp__gitlab__list_*",
+      "mcp__gitlab__search_*",
+      "mcp__gitlab__my_*",
+      "mcp__gitlab__verify_namespace",
+      "mcp__gitlab__download_attachment",
+      "mcp__gitlab__download_job_artifacts",
+      "mcp__gitlab__download_release_asset",
+      "mcp__gitlab__mr_discussions",
+      "mcp__dockerhub__check*",
+      "mcp__dockerhub__get*",
+      "mcp__dockerhub__list*",
+      "mcp__dockerhub__search",
+      "mcp__dockerhub__dockerHardenedImages",
+      "mcp__filesystem__read_*",
+      "mcp__filesystem__list_*",
+      "mcp__filesystem__search_*",
+      "mcp__filesystem__get_*",
+      "mcp__filesystem__directory_tree"
+    ]
+  },
   "hooks": {
     "SessionStart": [
       {
@@ -48,42 +80,6 @@
       }
     ]
   },
-  "permissions": {
-    "allow": [
-      "WebSearch",
-      "Bash(docker pull *)",
-      "Bash(docker run *)",
-      "Skill(update-config)",
-
-      "mcp__github",
-      "mcp__obsidian",
-      "mcp__fetch",
-      "mcp__context7",
-      "mcp__sequentialthinking",
-
-      "mcp__gitlab__get_*",
-      "mcp__gitlab__list_*",
-      "mcp__gitlab__search_*",
-      "mcp__gitlab__my_*",
-      "mcp__gitlab__verify_namespace",
-      "mcp__gitlab__download_attachment",
-      "mcp__gitlab__download_job_artifacts",
-      "mcp__gitlab__download_release_asset",
-      "mcp__gitlab__mr_discussions",
-
-      "mcp__dockerhub__check*",
-      "mcp__dockerhub__get*",
-      "mcp__dockerhub__list*",
-      "mcp__dockerhub__search",
-      "mcp__dockerhub__dockerHardenedImages",
-
-      "mcp__filesystem__read_*",
-      "mcp__filesystem__list_*",
-      "mcp__filesystem__search_*",
-      "mcp__filesystem__get_*",
-      "mcp__filesystem__directory_tree"
-    ]
-  },
   "statusLine": {
     "type": "command",
     "command": "sh /Users/filipp.vysokov/.claude/statusline-command.sh"
@@ -100,5 +96,6 @@
         "repo": "anthropics/claude-plugins-official"
       }
     }
-  }
+  },
+  "tui": "fullscreen"
 }
