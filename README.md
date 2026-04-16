@@ -149,7 +149,7 @@ This workflow is a synthesis of ideas from people who published their own reason
 
 - **Paths are machine-local.** `settings.json`, `auto-sync.sh`, and a few other files contain absolute paths under `/Users/filipp.vysokov/`. If you fork, either edit them or set up your own home directory to match.
 - **Opinionated.** The taxonomy reflects how *I* work (mostly DevOps/infra, occasional Go/Python app code, frequent debug). Your buckets may differ. Edit `CLAUDE.md` and `skills/classify-task/SKILL.md` to match your reality.
-- **No license file.** This is a personal config repo. If you want to reuse substantial parts in your own public project, open an issue and we'll sort it out.
+- **Free to use for anyone, everywhere.** Reuse, fork, or adapt any part of this repo — no restrictions. Suggestions and contributions via issues are welcomed.
 
 ## Contributing
 
