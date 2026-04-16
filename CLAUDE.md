@@ -84,6 +84,7 @@ Host may inject additional MCPs (e.g. `github`, `dockerhub`, `filesystem`, `comp
 ## Security
 - Never commit secrets. `OBSIDIAN_API_KEY` lives in shell env (`~/.zshrc`), not in `~/.claude.json`.
 - Refuse destructive ops (`git reset --hard`, force push, `rm -rf` on unknown state) without explicit user confirmation.
+- **Never fetch GitLab CI/CD variables** (project, group, or environment-scoped) via any `mcp__gitlab__*` tool without explicit user permission — they typically contain secrets. Metadata-only operations (pipelines, jobs, code, MRs) are fine without asking.
 
 ---
 # userEmail
