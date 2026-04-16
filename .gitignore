@@ -22,6 +22,10 @@
 !skills/**/references/
 !skills/**/references/*.md
 
+# Allow the hooks directory and shell scripts inside it
+!hooks/
+!hooks/*.sh
+
 # --- Hard-block things that must never leak, even if the above allowlist
 # would otherwise include them ---
 CLAUDE.md.bak*
