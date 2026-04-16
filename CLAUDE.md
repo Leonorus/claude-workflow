@@ -25,7 +25,7 @@ Classify the request into one of the buckets below and apply that weight. If you
 - **After code/config change (non-trivia):** update `AGENTS.md` and affected docs in the repo.
 - **Plans, specs, research notes go to Obsidian**, not the repo.
 
-**Consult Obsidian for Ops/Infra and Debug buckets.** A vault index is injected at SessionStart (paths + tags from `~/Obsidian/Work/`). Before proposing fixes or runbooks, scan that index — if anything looks related, call `mcp__obsidian__obsidian_simple_search` with keywords from the request and read matching notes via `mcp__obsidian__obsidian_get_file_contents` *before* answering. Cite the note path when you use one.
+**Consult Obsidian for Ops/Infra and Debug buckets.** A vault index is injected at SessionStart. Before proposing fixes, scan the index for notes whose **path or tags share concrete keywords** with the request (component names, hostnames, error strings, services). Only if there's a direct match, call `mcp__obsidian__obsidian_simple_search` to confirm and read the note via `mcp__obsidian__obsidian_get_file_contents`. **Do NOT speculate that a tangentially-related incident may apply** — irrelevant context is worse than none. If unsure, do not include the note. Cite the note path only when its content directly addresses the request.
 
 ---
 
