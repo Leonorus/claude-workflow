@@ -85,13 +85,7 @@
       "mcp__filesystem__list_*",
       "mcp__filesystem__search_*",
       "mcp__filesystem__get_*",
-      "mcp__filesystem__directory_tree",
-
-      "mcp__computer-use__screenshot",
-      "mcp__computer-use__cursor_position",
-      "mcp__computer-use__read_clipboard",
-      "mcp__computer-use__list_granted_applications",
-      "mcp__computer-use__request_access"
+      "mcp__filesystem__directory_tree"
     ]
   },
   "statusLine": {
