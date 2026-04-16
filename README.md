@@ -1,8 +1,8 @@
 # claude-workflow
 
-A focused, context-aware workflow for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). Instead of forcing one heavy process onto every task, it classifies requests into buckets (trivia / ops-infra / go-python-app / go-python-script / debug / research) and applies weight proportional to what the task actually needs. Karpathy-style meta-principles (think before coding, simplicity, surgical changes, goal-driven execution) run across all of them.
+A focused, context-aware workflow for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). Instead of forcing one heavy process onto every task, it classifies requests into buckets (trivia / light-ops / heavy-ops / go-python-app / go-python-script / debug / research) and applies weight proportional to what the task actually needs. Light tasks can **escalate to heavy mid-flight** when scope turns out bigger than stated. Karpathy-style meta-principles (think before coding, simplicity, surgical changes, goal-driven execution) run across all of them.
 
-Plans and research live in an Obsidian vault outside any repo, so working notes don't pollute project history. Architecture review and project-doc updates are first-class steps of the workflow, not afterthoughts.
+Plans and research live in an Obsidian vault outside any repo, treated as a **cross-project knowledge library** — patterns that repeat across repos get promoted to `Knowledge/<topic>.md` with cross-links. Architecture review and project-doc updates are first-class steps of the workflow, not afterthoughts.
 
 ## Why this exists
 
@@ -17,7 +17,7 @@ This repo is the minimum-viable reset: a short `CLAUDE.md` with priority order a
 
 ```
 .
-├── CLAUDE.md                    User-level preferences, taxonomy, 4 principles, MCP priority
+├── CLAUDE.md                    User-level preferences, 4 principles, MCP priority (taxonomy lives in classify-task skill)
 ├── settings.json                Plugin list, hooks (ansible-lint, terraform-fmt, auto-sync, obsidian-index)
 ├── mcp.json                     Docker-based MCP servers
 ├── statusline-command.sh        Custom status line (cwd, branch, context %, rate-limit %)
@@ -39,15 +39,16 @@ This repo is the minimum-viable reset: a short `CLAUDE.md` with priority order a
 
 | Bucket | Trigger signals | Weight |
 |---|---|---|
-| **Trivia** | typo, rename, single-line config tweak, obvious doc fix | Just do it. No workflow. |
-| **Ops / Infra** | Ansible, Terraform, shell, k8s, CI, Dockerfile | Short plan if >1 file. Dry-run / `--check` / `plan` before apply. Arch review. Doc update. |
-| **Go / Python app code** | real module (`go.mod` / `pyproject.toml`, tests dir present) | Brainstorm → plan → **TDD** → code review → arch review → verify → doc update. |
-| **Go / Python script** | single-file, <~100 lines, glue/automation | Short plan if non-trivial. No TDD. Arch review. Doc update. |
+| **Trivia** | typo, one-char rename, single-line config tweak, obvious doc fix | Just do it. No workflow. |
+| **Light Ops** | Ansible/Terraform/k8s/CI/Docker: single file, <~50 diff lines, no prod-boundary touch, no new role/module/stack | Edit → lint → (dry-run only if touching prod vars/state) → commit → offer MR. No brainstorm, no arch review. |
+| **Heavy Ops** | Ops change that is multi-file, touches prod boundary, introduces a new role/module/stack, is an architectural shift, or repeats across 2+ repos | Deep-dive: brainstorm → Obsidian check (`Knowledge/` + `Projects/`) → writing-plans → implement → lint → **mandatory dry-run gate** → arch review → apply → commit → MR → docs → Obsidian note. |
+| **Go / Python app code** | real module (`go.mod` / `pyproject.toml`, tests dir present) | Full app pipeline: brainstorm → plan → **TDD** → code review → arch review → verify → doc update. |
+| **Go / Python script** | single-file, <~100 lines, glue/automation | Short plan if non-trivial. No TDD. Arch review if not one-off. Doc update. |
 | **Debug** | bug report, test failure, stack trace, "why is X broken" | `systematic-debugging`: hypothesis → minimal repro → instrument → fix → verify. No speculative fixes. |
-| **Research** | "how does X work", "compare A vs B" — no bug, just learning | Read, investigate, report to Obsidian. No workflow weight. |
+| **Research** | "how does X work", "compare A vs B" — no bug, just learning | Read, investigate. Cross-project topic → `Knowledge/<topic>.md`; repo-specific → `Projects/<repo>/…`. No workflow weight. |
 | **Ambiguous** | two buckets fit, or scope unclear | **Ask the user** before proceeding. |
 
-The `classify-task` skill is invoked first on every request and picks the bucket out loud.
+The `classify-task` skill is invoked first on every request and picks the bucket out loud. It also defines **escalation rules** (a Light Ops fix pauses and offers promotion to Heavy Ops when the same pattern exists in 2+ repos, when the diff grows past ~50 lines, or when a one-line change turns out to patch around a deeper design issue) and threads **insights** — better approach, best-practice drift, simplification, cross-repo unification — into every non-trivia step boundary.
 
 ## Four always-on principles
 
@@ -55,6 +56,18 @@ The `classify-task` skill is invoked first on every request and picks the bucket
 2. **Simplicity first** — minimum code that solves the problem. Nothing speculative.
 3. **Surgical changes** — touch only what was asked. No unrelated refactors.
 4. **Goal-driven execution** — define success criteria up front, verify before claiming done.
+
+## Obsidian as cross-project library
+
+`~/Obsidian/Work/` is not a per-repo scratch pad — it's a shared library across all work.
+
+- **`Projects/<repo>/YYYY-MM-DD-<slug>.md`** — repo-specific plans and debug findings.
+- **`Knowledge/<topic>.md`** — reusable patterns, architectural decisions, things that cross-link 2+ repos.
+- **`Daily/YYYY-MM-DD.md`** — scratch.
+
+Before implementing an Ops/Infra or Debug approach, Claude searches **both** `Projects/<current-repo>/` and `Knowledge/` — the same problem may already be solved in another repo. When a pattern repeats across 2+ repos, it gets promoted from a project note to `Knowledge/<topic>.md` with relative cross-links back to the source projects. The `architecture-review` skill flags **promotion candidates** during its post-implementation pass.
+
+At the end of non-trivia tasks, Claude proposes a note (draft + target path); the user confirms before it's written. Never auto-write.
 
 ## Installation
 
