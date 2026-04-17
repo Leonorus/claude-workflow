@@ -141,7 +141,8 @@
   "enabledPlugins": {
     "claude-md-management@claude-plugins-official": true,
     "remember@claude-plugins-official": true,
-    "superpowers@claude-plugins-official": true
+    "superpowers@claude-plugins-official": true,
+    "engram@engram": true
   },
   "extraKnownMarketplaces": {
     "claude-plugins-official": {
