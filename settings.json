@@ -99,6 +99,7 @@
       "mcp__plugin_engram_engram__mem_capture_passive"
     ]
   },
+  "model": "opus",
   "hooks": {
     "SessionStart": [
       {
