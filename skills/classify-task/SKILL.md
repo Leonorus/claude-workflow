@@ -12,13 +12,13 @@ First move on any request. Decides how much process to apply, and threads the us
 | Bucket | Signals | Weight applied |
 |---|---|---|
 | **Trivia** | typo, one-char rename, single-line config tweak, obvious doc fix | Just do it. No brainstorm, no plan, no arch review, no doc update. |
-| **Light Ops** | Ansible/Terraform/k8s/CI/Docker change that is: single file, <~50 diff lines, no prod-boundary touch, no new role/module/stack, no architectural shift | Edit → lint → (dry-run only if touching prod vars/state) → commit → offer MR. No brainstorm, no arch review. Surface insights if noticed. |
-| **Heavy Ops** | Ops change with any of: multi-file, prod-boundary touch (prod vars, live cluster, secrets, network/security rules), new role/module/stack, architectural shift, or same pattern exists in 2+ repos | Deep-dive: brainstorm → Obsidian check (`Knowledge/` + `Projects/`) → writing-plans → implement → lint/validate → **mandatory dry-run gate** → architecture-review → apply → commit → MR → update-project-docs → propose Obsidian note. **Fan out read-only leaves to subagents (see section below).** |
-| **Go / Python app code** | project has `go.mod` or `pyproject.toml`, has `tests/` or `_test.go`, multiple packages/modules | Full app pipeline: brainstorm → writing-plans → **TDD** (red-green-refactor) → requesting-code-review → architecture-review → verification-before-completion → update-project-docs. |
-| **Go / Python script** | single file, <~100 lines, glue/automation, no tests dir, run-once or cron | Short plan if non-trivial. No TDD — manual smoke test. Arch review if it's not one-off. update-project-docs. |
-| **Debug** | bug report, test failure, stack trace provided, "why is X broken", unexpected behavior | `systematic-debugging`: hypothesis → minimal repro → instrument → targeted fix → verify. No speculative fixes. If a fix ships: arch-review + verify + update-project-docs. Investigation-only: findings go to Obsidian (`Knowledge/` if reusable, else `Projects/<repo>/`). |
-| **Research / Exploration** | "how does X work", "what's in this repo", "compare A vs B" — no bug, no code change | Read, investigate, report. Write findings to `Knowledge/<topic>.md` if the topic is cross-project, else `Projects/<repo>/<date>-<slug>.md`. No workflow weight. |
-| **Ambiguous** | 2+ buckets fit, or scope is unclear | **Ask the user** which bucket + scope. Do not guess. |
+| **Light Ops** | Ansible/Terraform/k8s/CI/Docker change that is: single file, <~50 diff lines, no prod-boundary touch, no new role/module/stack, no architectural shift | **Dispatch `light-ops` agent (Sonnet)** for the edit + lint. Then in main: (dry-run only if touching prod vars/state) → commit → offer MR. No brainstorm, no arch review. Surface insights if noticed. |
+| **Heavy Ops** | Ops change with any of: multi-file, prod-boundary touch (prod vars, live cluster, secrets, network/security rules), new role/module/stack, architectural shift, or same pattern exists in 2+ repos | **Stay on main (Opus).** Deep-dive: brainstorm → Obsidian check (`Knowledge/` + `Projects/`) → writing-plans → implement → lint/validate → **mandatory dry-run gate** → architecture-review → apply → commit → MR → update-project-docs → propose Obsidian note. **Fan out read-only leaves to subagents (see section below).** |
+| **Go / Python app code** | project has `go.mod` or `pyproject.toml`, has `tests/` or `_test.go`, multiple packages/modules | **Stay on main (Opus) for orchestration.** Full app pipeline: brainstorm → writing-plans → **TDD** (red-green-refactor, fan out independent slices via `implementation-leaf` Sonnet agents) → requesting-code-review → architecture-review → verification-before-completion → update-project-docs. |
+| **Go / Python script** | single file, <~100 lines, glue/automation, no tests dir, run-once or cron | **Dispatch `script-work` agent (Sonnet).** Short plan if non-trivial. No TDD — manual smoke test. Arch review if it's not one-off. update-project-docs. |
+| **Debug** | bug report, test failure, stack trace provided, "why is X broken", unexpected behavior | **Stay on main (Opus).** `systematic-debugging`: hypothesis → minimal repro → instrument → targeted fix → verify. No speculative fixes. If a fix ships: arch-review + verify + update-project-docs. Investigation-only: findings go to Obsidian (`Knowledge/` if reusable, else `Projects/<repo>/`). |
+| **Research / Exploration** | "how does X work", "what's in this repo", "compare A vs B" — no bug, no code change | **Dispatch `research` agent (Sonnet).** Read, investigate, report. Write findings to `Knowledge/<topic>.md` if the topic is cross-project, else `Projects/<repo>/<date>-<slug>.md`. No workflow weight. |
+| **Ambiguous** | 2+ buckets fit, or scope is unclear | **Stay on main (Opus). Ask the user** which bucket + scope. Do not guess. |
 
 ## Procedure
 
@@ -57,11 +57,12 @@ Format: one short paragraph per insight. What matters is clarity. Do **not** imp
 **Rule:** fan out any step that *reads without writing*, join in main. Sequential, feedback-heavy, user-interactive, and destructive steps stay in the main agent.
 
 **Fan out** (parallel subagents, one message with multiple `Agent` tool calls):
-- **Obsidian consult** — one subagent per vault path to search (`Projects/<current-repo>/`, `Knowledge/<topic>*`).
-- **Library / docs lookup** — `mcp__context7` and `mcp__fetch` queries for unfamiliar libraries, CVEs, upstream release notes.
-- **Inventory / reference scan** — "find all call sites of X", "list every role that implements pattern Y", "grep for deprecated flag Z across the repo".
-- **Per-file lint / validate when files are independent** — e.g., `ansible-lint` on 5 unrelated roles, `terraform validate` in 3 separate modules.
-- **Architecture review** — already dispatches a subagent by the skill's own design; this rule just makes it explicit.
+- **Obsidian consult** — dispatch `obsidian-consult` (Haiku), one subagent per vault path to search (`Projects/<current-repo>/`, `Knowledge/<topic>*`).
+- **Library / docs lookup** — dispatch `docs-lookup` (Haiku) for `mcp__context7` and `mcp__fetch` queries: unfamiliar libraries, CVEs, upstream release notes.
+- **Inventory / reference scan** — dispatch `inventory-scan` (Haiku): "find all call sites of X", "list every role that implements pattern Y", "grep for deprecated flag Z across the repo".
+- **Per-file lint / validate when files are independent** — e.g., `ansible-lint` on 5 unrelated roles, `terraform validate` in 3 separate modules. A bash hook or parallel `Bash` calls is cheaper than an agent here.
+- **Architecture review** — already dispatches a subagent by the skill's own design (Opus); this rule just makes it explicit.
+- **Independent implementation slices** (app-code TDD) — dispatch `implementation-leaf` (Sonnet) per slice when leaves are truly independent; see `superpowers:subagent-driven-development`.
 
 **Stay in main agent** (do not fan out):
 - **Brainstorm, plan writing** — user feedback loop; insights emerge from the whole picture.
