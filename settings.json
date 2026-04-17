@@ -4,6 +4,7 @@
       "WebSearch",
       "Bash(docker pull *)",
       "Bash(docker run *)",
+      "Bash(rtk *)",
       "Skill(update-config)",
       "mcp__github",
       "mcp__obsidian",
