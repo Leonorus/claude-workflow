@@ -18,7 +18,8 @@ This repo is the minimum-viable reset: a short `CLAUDE.md` with priority order a
 ```
 .
 ├── CLAUDE.md                    User-level preferences, 4 principles, MCP priority (taxonomy lives in classify-task skill)
-├── settings.json                Plugin list, hooks (ansible-lint, terraform-fmt, auto-sync, obsidian-index)
+├── RTK.md                       RTK (Rust Token Killer) reference — imported into CLAUDE.md via `@RTK.md`
+├── settings.json                Plugin list, hooks (ansible-lint, terraform-fmt, auto-sync, obsidian-index, rtk)
 ├── mcp.json                     Docker-based MCP servers
 ├── statusline-command.sh        Custom status line (cwd, branch, context %, rate-limit %)
 ├── auto-sync.sh                 Stop-hook: commits and pushes tracked changes after each turn
@@ -130,6 +131,12 @@ If you already have customizations you want to keep, clone into a scratch direct
   - [`superpowers`](https://github.com/obra/superpowers) — the skills library this workflow treats as a reusable toolbox (brainstorming, writing-plans, test-driven-development, systematic-debugging, verification-before-completion, requesting-code-review, receiving-code-review, finishing-a-development-branch).
   - `remember` — session-boundary state.
   - `claude-md-management` — auditing project-level AGENTS.md files.
+
+## Token optimization (RTK)
+
+**RTK (Rust Token Killer)** is a CLI proxy that filters verbose output from common dev tools (git, docker, npm, etc.) before it enters the context window, cutting 60–90% of tokens on read-heavy operations. A `PreToolUse` Bash hook (`rtk hook claude`) in `settings.json` transparently rewrites invocations — `git status` runs as `rtk git status` with no extra tokens spent on the rewrite itself. Meta commands (`rtk gain`, `rtk discover`) stay explicit. `RTK.md` holds the command reference and is imported into `CLAUDE.md` via `@RTK.md`.
+
+RTK is optional — remove the `PreToolUse` entry in `settings.json` and the `@RTK.md` line at the bottom of `CLAUDE.md` to disable.
 
 ## Auto-sync
 
