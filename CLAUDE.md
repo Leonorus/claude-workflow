@@ -14,11 +14,12 @@ Invoke the `classify-task` skill. Its verdict determines the bucket, workflow, a
 **Cross-cutting (applies to every non-trivia bucket):**
 - **After implementation:** invoke `update-project-docs` to update `AGENTS.md` and affected in-repo docs.
 - **At end of task:** decide if a note is worth keeping. Ask the user: "Take a note for this?" with a one-line summary + target path. On yes, auto-write (no draft-review round-trip). Pick path:
-  - Reusable pattern / architectural decision / cross-project → `Knowledge/<topic>.md`
-  - Repo-specific plan or debug finding → `Projects/<repo>/YYYY-MM-DD-<slug>.md`
+  - Repo-specific plan or debug finding → `Projects/<repo>/YYYY-MM-DD-<slug>.md` (the *raw source*)
+  - Then, if reusable: propose promotion to `Knowledge/<topic>.md` (abstract, public) and/or `Organization/<topic>.md` (org-specific, local). See the ingest workflow below.
+
   If the task is trivial or a duplicate of an existing note, skip the ask.
 
-**Consult Obsidian for Ops/Infra and Debug.** SessionStart injects a vault index. Before proposing an approach, search **both** `Projects/<current-repo>/` **and** `Knowledge/` — the same problem may be solved in another repo. Use direct keyword overlap (component names, hostnames, error strings); never cite tangentially-related notes. Confirm with `mcp__obsidian__obsidian_simple_search`, read with `mcp__obsidian__obsidian_get_file_contents`.
+**Consult Obsidian for Ops/Infra and Debug.** SessionStart injects a vault index. Before proposing an approach, search `Projects/<current-repo>/`, `Knowledge/`, and `Organization/` — the same problem may be solved in another repo, or be documented as a general pattern or an org-specific decision. Use direct keyword overlap (component names, hostnames, error strings); never cite tangentially-related notes. Confirm with `mcp__obsidian__obsidian_simple_search`, read with `mcp__obsidian__obsidian_get_file_contents`.
 
 ---
 
@@ -34,24 +35,41 @@ Invoke the `classify-task` skill. Its verdict determines the bucket, workflow, a
 
 ---
 
-## Plans, notes, knowledge → Obsidian
-Vault at `~/Obsidian/Work/`:
-- **Plans/specs** → `Projects/<repo-name>/YYYY-MM-DD-<slug>.md`, frontmatter `tags: [plan, <repo>]`, `status: draft|active|done`.
-- **Debug findings** → `Projects/<repo-name>/YYYY-MM-DD-debug-<slug>.md`, tags `[debug, <repo>]`.
-- **Reusable knowledge** → `Knowledge/<topic>.md`, tags `[knowledge, <topic>]`.
-- **Daily scratch** → `Daily/YYYY-MM-DD.md`.
+## Vault: four-layer knowledge model
+Vault at `~/Obsidian/Work/`. Four layers, inspired by [karpathy's LLM Wiki pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f):
 
-Prefer `mcp__obsidian__*` tools (`obsidian_append_content`, `obsidian_patch_content`, `obsidian_simple_search`) over raw Write/Read inside the vault. If Obsidian app isn't running, fall back to raw filesystem Write and tell the user — the vault is just markdown on disk.
+- **`Projects/<repo>/YYYY-MM-DD-<slug>.md`** — raw working notes per repo. Plans (`tags: [plan, <repo>]`, `status: draft|active|done`) and debug findings (`YYYY-MM-DD-debug-<slug>.md`, tags `[debug, <repo>]`). These are the *sources* that feed the two synthesis layers.
+- **`Knowledge/<topic>.md`** — abstract, reusable patterns (architectures, practices, debug recipes, tool notes). **Its own public git repo** at `Knowledge/.git/` (remote: `git@github.com:Leonorus/knowlege.git`, branch `main`), portable across jobs. **Sanitized**: no hostnames, internal URLs, `tl-lan.ru`, ticket IDs, employee names, or org codenames. Frontmatter: `tags: [knowledge, <topic>]`.
+- **`Organization/<topic>.md`** — org-specific knowledge (architecture, service graph, conventions, runbooks). Local-only, not versioned. Links down to `Projects/` sources, up to `Knowledge/` patterns.
+- **`Daily/YYYY-MM-DD.md`** — daily scratch.
 
-Never commit Obsidian vault paths to a repo. `~/Obsidian/` lives outside repos by design.
+Each synthesis layer (`Knowledge/`, `Organization/`) owns two special files:
+- `index.md` — content catalog grouped by category, one line per page. Update on every ingest.
+- `log.md` — append-only `## [YYYY-MM-DD] <op> | <title>` entries (ingest, query, lint).
 
-### Obsidian as cross-project library
-Obsidian isn't a per-repo scratch pad — it's a shared library across all this user's work.
-- Architecturally linked projects may solve the same problem differently; use Obsidian to unify those designs.
-- When a pattern repeats across 2+ repos, promote the finding from a project note to `Knowledge/<topic>.md` and cross-link the source projects by relative path.
-- Prefer linking existing `Knowledge/` notes over duplicating content.
-- Before implementing an Ops/Infra or Debug approach, search `Knowledge/` — not just the current project's folder.
-- Insights welcome: if during any task you notice a pattern repeating, a design smell across repos, or an opportunity to unify — raise it to the user as a proposal, don't just execute in silence.
+Prefer `mcp__obsidian__*` tools (`obsidian_append_content`, `obsidian_patch_content`, `obsidian_simple_search`) over raw Write/Read inside the vault. If Obsidian app isn't running, fall back to filesystem and tell the user — the vault is just markdown on disk.
+
+Never commit vault paths to an unrelated repo. `Knowledge/` has its own public remote; `Organization/` stays local.
+
+### Ingest workflow (push-based)
+At end of any non-trivial project task, after the "Take a note?" step, propose promotions up to the synthesis layers — only when there's a genuinely reusable pattern. Skip silently for one-off details.
+
+Format:
+> Propagation candidates from `Projects/<repo>/<note>.md`:
+> - **Knowledge**: `<topic>.md` (new / update §X) — one-line rationale
+> - **Organization**: `<topic>.md` (new / update §X) — one-line rationale
+>
+> Promote, skip, or edit?
+
+A single project note may touch multiple pages in each layer. On promote: update the target page(s), update the target layer's `index.md`, append a source-linked entry to its `log.md`.
+
+**Sanitization check before writing to `Knowledge/`**: scan for hostnames, internal URLs, `tl-lan.ru`, ticket IDs, employee names, and org codenames. If found, either rephrase generically or divert that content to `Organization/` instead.
+
+### Lint pass (user-triggered)
+On request (`lint knowledge` / `lint organization`), scan the target layer for: contradictions between pages, stale claims newer sources have superseded, orphan pages (no inbound links), missing cross-references between related pages, concepts frequently mentioned but lacking their own page. Report findings; act only on approval; log the pass in that layer's `log.md`.
+
+### Cross-project library behavior
+Obsidian is a shared library across all work, not a per-repo scratchpad. Architecturally linked projects may solve the same problem differently — use the synthesis layers to unify designs. Prefer linking existing pages over duplicating content. Raise repeating patterns and cross-repo design smells as proposals; don't execute in silence.
 
 ---
 
