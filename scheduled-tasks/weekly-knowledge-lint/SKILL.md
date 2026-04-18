@@ -36,21 +36,26 @@ For each layer, identify:
 
 **F. Ghost concepts** — concepts/terms mentioned in 3+ pages that lack their own page.
 
-**G. Sanitization (Knowledge/ only)** — scan every `Knowledge/*.md` for org-specific tokens: internal hostnames and FQDNs, internal URLs, ticket IDs (project-prefixed like `PROJ-1234`), employee names/usernames, org codenames. Report `path:line` with the offending snippet.
+**G. Abstract-pattern drift (Knowledge/ only)** — scan every `Knowledge/*.md` for employer-specific tokens that signal the page has drifted out of the abstract layer: internal hostnames and FQDNs, internal URLs, ticket IDs (project-prefixed like `PROJ-1234`), employee names/usernames, org codenames. Report `path:line` with the offending snippet — these pages should be rephrased generically or moved to `Organization/`.
 
-**H. Un-ingested clippings (global, reported once)** — list every file in `Clippings/` (recursive) that is NOT referenced by any page in `Knowledge/` or `Organization/`. Check for references by filename substring match (both bare `foo.md` and `[[Clippings/foo]]` forms). Report each un-ingested clipping with its relative path under `Clippings/`.
+**H. Stale pages** — list every `Knowledge/*.md` and `Organization/*.md` whose frontmatter `last_verified` is missing or older than 12 months from `TODAY`. Report `path` with the current `last_verified` value (or `missing`).
+
+**I. Un-ingested clippings (global, reported once)** — list every file in `Clippings/` (recursive) that is NOT referenced by any page in `Knowledge/` or `Organization/`. Check for references by filename substring match (both bare `foo.md` and `[[Clippings/foo]]` forms). Report each un-ingested clipping with its relative path under `Clippings/`.
 
 ## Step 3 — emit report
 
-Append to `Daily/{TODAY}.md` via `mcp__obsidian__obsidian_append_content` using this exact template. If a section has no items, write `_None_` on its own line — do NOT omit the heading.
+Append to `Daily/Lint/{TODAY}.md` via `mcp__obsidian__obsidian_append_content` using this exact template. If a section has no items, write `_None_` on its own line — do NOT omit the heading.
 
 ```
 ## Knowledge Lint — {TODAY}
 
 ### Knowledge/
 
-**Sanitization issues:** {N}
+**Abstract-pattern drift:** {N}
 - `{path}:{line}` — {snippet}
+
+**Stale pages:** {N}
+- `{path}` — last_verified: {value_or_missing}
 
 **Orphans:** {N}
 - `{path}` — {note}
@@ -72,7 +77,7 @@ Append to `Daily/{TODAY}.md` via `mcp__obsidian__obsidian_append_content` using 
 
 ### Organization/
 
-(same structure as above, minus Sanitization section)
+(same structure as above, minus Abstract-pattern drift section)
 
 ### Clippings/
 
@@ -85,10 +90,10 @@ Append to `Daily/{TODAY}.md` via `mcp__obsidian__obsidian_append_content` using 
 Append one line to each layer's `log.md` via `mcp__obsidian__obsidian_append_content`:
 
 ```
-## [{TODAY}] lint | {total_findings} findings ({N_sanitization} san, {N_orphans} orph, {N_contradictions} contra, {N_xref} xref, {N_ghost} ghost)
+## [{TODAY}] lint | {total_findings} findings ({N_drift} drift, {N_stale} stale, {N_orphans} orph, {N_contradictions} contra, {N_xref} xref, {N_ghost} ghost)
 ```
 
-For `Organization/log.md`, omit the `san` count.
+For `Organization/log.md`, omit the `drift` count.
 
 ## Rules
 

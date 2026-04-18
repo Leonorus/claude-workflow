@@ -13,11 +13,11 @@ Invoke the `classify-task` skill. Its verdict determines the bucket, workflow, a
 
 **Cross-cutting (applies to every non-trivia bucket):**
 - **After implementation:** invoke `update-project-docs` to update `AGENTS.md` and affected in-repo docs.
-- **At end of task:** decide if a note is worth keeping. Ask the user: "Take a note for this?" with a one-line summary + target path. On yes, auto-write (no draft-review round-trip). Pick path:
-  - Repo-specific plan or debug finding → `Projects/<repo>/YYYY-MM-DD-<slug>.md` (the *raw source*)
-  - Then, if reusable: propose promotion to `Knowledge/<topic>.md` (abstract, portable) and/or `Organization/<topic>.md` (org-specific, local). See the ingest workflow below.
-
-  If the task is trivial or a duplicate of an existing note, skip the ask.
+- **At end of task:**
+  - **Heavy Ops and Debug** (when a fix shipped, or investigation produced concrete findings): auto-write the raw note to `Projects/<repo>/YYYY-MM-DD-<slug>.md` — no "Take a note?" ask. Raw capture is cheap; the synthesis layer benefits from a steady source signal.
+  - **All other non-trivia buckets:** ask "Take a note for this?" with a one-line summary + `Projects/<repo>/YYYY-MM-DD-<slug>.md` target. On yes, auto-write.
+  - **Then, regardless of bucket:** if the raw note contains a genuinely reusable pattern, propose promotion to `Knowledge/<topic>.md` (abstract, portable) and/or `Organization/<topic>.md` (org-specific, local). The promotion ask stays gated — synthesis writes earn their keep. See the ingest workflow below.
+  - Skip the raw-note write only if the task is a duplicate of an existing note or genuinely trivial.
 
 **Consult Obsidian for Ops/Infra and Debug.** SessionStart injects a vault index. Before proposing an approach, search `Projects/<current-repo>/`, `Knowledge/`, and `Organization/` — the same problem may be solved in another repo, or be documented as a general pattern or an org-specific decision. Use direct keyword overlap (component names, hostnames, error strings); never cite tangentially-related notes. Confirm with `mcp__obsidian__obsidian_simple_search`, read with `mcp__obsidian__obsidian_get_file_contents`.
 
@@ -52,7 +52,7 @@ Vault at `~/Obsidian/Work/`. Five layers, inspired by [karpathy's LLM Wiki patte
 - **`Organization/<topic>.md`** — org-specific knowledge (architecture, service graph, conventions, runbooks). Local-only, not versioned. Frontmatter: `tags: [organization, <topic>]`, `last_verified: YYYY-MM-DD`. Links down to `Clippings/` and `Projects/` sources, up to `Knowledge/` patterns.
 
 **Scratch:**
-- **`Daily/YYYY-MM-DD.md`** — daily notes; also where lint reports are appended.
+- **`Daily/YYYY-MM-DD.md`** — daily notes. Lint and metrics reports go to `Daily/Lint/` (see lint pass below).
 
 Each synthesis layer (`Knowledge/`, `Organization/`) owns two special files:
 - `index.md` — content catalog grouped by category, one line per page. Update on every ingest.
@@ -81,7 +81,7 @@ Two ingest paths — same output shape (updates to synthesis layers + index + lo
 - Every synthesis page that cites a source must use a relative link (e.g. `[[Clippings/foo.md]]` or `[[Projects/<repo>/2026-04-18-debug-x.md]]`), so Obsidian's graph view shows the source trail.
 
 ### Lint pass (user-triggered + weekly cron)
-On request (`lint knowledge` / `lint organization`), or automatically Mondays 10:00 local via the `com.filipp.weekly-knowledge-lint` launchd agent, scan the synthesis layers for: contradictions between pages, stale claims newer sources have superseded, **pages whose `last_verified` is older than 12 months**, orphan pages (no inbound links), missing cross-references between related pages, concepts frequently mentioned but lacking their own page. Also flag **un-ingested clippings** — files in `Clippings/` not referenced by any page in `Knowledge/` or `Organization/`. Report findings to `Daily/<today>.md`; act only on approval; log the pass in each synthesis layer's `log.md`.
+On request (`lint knowledge` / `lint organization`), or automatically Mondays 10:00 local via the `com.filipp.weekly-knowledge-lint` launchd agent, scan the synthesis layers for: contradictions between pages, stale claims newer sources have superseded, **pages whose `last_verified` is older than 12 months**, orphan pages (no inbound links), missing cross-references between related pages, concepts frequently mentioned but lacking their own page. Also flag **un-ingested clippings** — files in `Clippings/` not referenced by any page in `Knowledge/` or `Organization/`. Report lint findings to `Daily/Lint/<today>.md` and deterministic metrics (layer counts, promotion ratio, mean-age, stale-page count) to `Daily/Lint/<today>-metrics.md`; act only on approval; log the pass in each synthesis layer's `log.md`.
 
 ### Cross-project library behavior
 Obsidian is a shared library across all work, not a per-repo scratchpad. Architecturally linked projects may solve the same problem differently — use the synthesis layers to unify designs. Prefer linking existing pages over duplicating content. Raise repeating patterns and cross-repo design smells as proposals; don't execute in silence.

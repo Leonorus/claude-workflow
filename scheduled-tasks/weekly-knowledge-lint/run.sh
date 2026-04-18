@@ -23,6 +23,9 @@ printf '%s' "$PROMPT" | /Users/filipp.vysokov/.local/bin/claude \
   --dangerously-skip-permissions \
   --model claude-sonnet-4-6
 
+# Deterministic metrics sidecar — produces Daily/Lint/{TODAY}-metrics.md
+python3 "$ROOT/metrics.py" 2>&1 || true
+
 # Commit and push the log.md entry in the Knowledge/ repo, if dirty.
 # Failures here must not break the run.
 KN="$HOME/Obsidian/Work/Knowledge"
