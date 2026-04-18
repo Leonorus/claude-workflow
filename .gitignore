@@ -27,6 +27,14 @@
 !hooks/
 !hooks/*.sh
 
+# Allow scheduled-tasks (launchd jobs) — each with its SKILL.md, run.sh, and plist.
+# Per-task logs/ and transient state are blocked by the default `*` rule.
+!scheduled-tasks/
+!scheduled-tasks/*/
+!scheduled-tasks/*/SKILL.md
+!scheduled-tasks/*/run.sh
+!scheduled-tasks/*/*.plist
+
 # --- Hard-block things that must never leak, even if the above allowlist
 # would otherwise include them ---
 CLAUDE.md.bak*

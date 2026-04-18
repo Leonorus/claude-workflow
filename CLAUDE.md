@@ -35,13 +35,19 @@ Invoke the `classify-task` skill. Its verdict determines the bucket, workflow, a
 
 ---
 
-## Vault: four-layer knowledge model
-Vault at `~/Obsidian/Work/`. Four layers, inspired by [karpathy's LLM Wiki pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f):
+## Vault: five-layer knowledge model
+Vault at `~/Obsidian/Work/`. Five layers, inspired by [karpathy's LLM Wiki pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f):
 
-- **`Projects/<repo>/YYYY-MM-DD-<slug>.md`** — raw working notes per repo. Plans (`tags: [plan, <repo>]`, `status: draft|active|done`) and debug findings (`YYYY-MM-DD-debug-<slug>.md`, tags `[debug, <repo>]`). These are the *sources* that feed the two synthesis layers.
+**Raw sources (inputs — feed the synthesis layers):**
+- **`Clippings/`** — external raw sources: web articles (via Obsidian Web Clipper), papers, vendor docs, RFCs, post-mortems. **Immutable**: the LLM reads from `Clippings/` but never writes, edits, renames, or deletes there. This is the source of truth for external material.
+- **`Projects/<repo>/YYYY-MM-DD-<slug>.md`** — internal working notes per repo. Plans (`tags: [plan, <repo>]`, `status: draft|active|done`) and debug findings (`YYYY-MM-DD-debug-<slug>.md`, tags `[debug, <repo>]`). Editable while active; treated as sources once the task is done.
+
+**Synthesis (compiled knowledge — LLM-maintained):**
 - **`Knowledge/<topic>.md`** — abstract, reusable patterns (architectures, practices, debug recipes, tool notes). **Its own public git repo** at `Knowledge/.git/` (remote: `git@github.com:Leonorus/knowlege.git`, branch `main`), portable across jobs. **Sanitized**: no hostnames, internal URLs, `tl-lan.ru`, ticket IDs, employee names, or org codenames. Frontmatter: `tags: [knowledge, <topic>]`.
-- **`Organization/<topic>.md`** — org-specific knowledge (architecture, service graph, conventions, runbooks). Local-only, not versioned. Links down to `Projects/` sources, up to `Knowledge/` patterns.
-- **`Daily/YYYY-MM-DD.md`** — daily scratch.
+- **`Organization/<topic>.md`** — org-specific knowledge (architecture, service graph, conventions, runbooks). Local-only, not versioned. Links down to `Clippings/` and `Projects/` sources, up to `Knowledge/` patterns.
+
+**Scratch:**
+- **`Daily/YYYY-MM-DD.md`** — daily notes; also where lint reports are appended.
 
 Each synthesis layer (`Knowledge/`, `Organization/`) owns two special files:
 - `index.md` — content catalog grouped by category, one line per page. Update on every ingest.
@@ -51,22 +57,26 @@ Prefer `mcp__obsidian__*` tools (`obsidian_append_content`, `obsidian_patch_cont
 
 Never commit vault paths to an unrelated repo. `Knowledge/` has its own public remote; `Organization/` stays local.
 
-### Ingest workflow (push-based)
-At end of any non-trivial project task, after the "Take a note?" step, propose promotions up to the synthesis layers — only when there's a genuinely reusable pattern. Skip silently for one-off details.
+### Ingest workflows
+Two ingest paths — same output shape (updates to synthesis layers + index + log entry), different triggers.
 
-Format:
+**A. Push from `Projects/` (end-of-task).** After the "Take a note?" step, propose promotions up to the synthesis layers — only when there's a genuinely reusable pattern. Skip silently for one-off details.
+
 > Propagation candidates from `Projects/<repo>/<note>.md`:
 > - **Knowledge**: `<topic>.md` (new / update §X) — one-line rationale
 > - **Organization**: `<topic>.md` (new / update §X) — one-line rationale
 >
 > Promote, skip, or edit?
 
-A single project note may touch multiple pages in each layer. On promote: update the target page(s), update the target layer's `index.md`, append a source-linked entry to its `log.md`.
+**B. Pull from `Clippings/` (on demand).** When the user asks to ingest a clipping (by name, or "ingest new clippings"), read the clipped file, summarize the key takeaways, then propose the same propagation format. Never modify the clipping itself — link to it from the synthesis pages instead.
 
-**Sanitization check before writing to `Knowledge/`**: scan for hostnames, internal URLs, `tl-lan.ru`, ticket IDs, employee names, and org codenames. If found, either rephrase generically or divert that content to `Organization/` instead.
+**Rules that apply to both paths:**
+- A single source may touch multiple pages in each layer. On promote: update the target page(s), update the target layer's `index.md`, append a source-linked entry to its `log.md`.
+- **Sanitization check before writing to `Knowledge/`**: scan for hostnames, internal URLs, `tl-lan.ru`, ticket IDs, employee names, and org codenames. If found, either rephrase generically or divert that content to `Organization/` instead.
+- Every synthesis page that cites a source must use a relative link (e.g. `[[Clippings/foo.md]]` or `[[Projects/<repo>/2026-04-18-debug-x.md]]`), so Obsidian's graph view shows the source trail.
 
-### Lint pass (user-triggered)
-On request (`lint knowledge` / `lint organization`), scan the target layer for: contradictions between pages, stale claims newer sources have superseded, orphan pages (no inbound links), missing cross-references between related pages, concepts frequently mentioned but lacking their own page. Report findings; act only on approval; log the pass in that layer's `log.md`.
+### Lint pass (user-triggered + weekly cron)
+On request (`lint knowledge` / `lint organization`), or automatically Mondays 10:00 local via the `com.filipp.weekly-knowledge-lint` launchd agent, scan the synthesis layers for: contradictions between pages, stale claims newer sources have superseded, orphan pages (no inbound links), missing cross-references between related pages, concepts frequently mentioned but lacking their own page. Also flag **un-ingested clippings** — files in `Clippings/` not referenced by any page in `Knowledge/` or `Organization/`. Report findings to `Daily/<today>.md`; act only on approval; log the pass in each synthesis layer's `log.md`.
 
 ### Cross-project library behavior
 Obsidian is a shared library across all work, not a per-repo scratchpad. Architecturally linked projects may solve the same problem differently — use the synthesis layers to unify designs. Prefer linking existing pages over duplicating content. Raise repeating patterns and cross-repo design smells as proposals; don't execute in silence.

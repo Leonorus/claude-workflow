@@ -33,6 +33,9 @@ This repo is the minimum-viable reset: a short `CLAUDE.md` with priority order a
 │   ├── goal-driven-execution/   Define "done", verify, don't claim without evidence
 │   ├── architecture-review/     Dispatches subagent for design-smell pass
 │   └── update-project-docs/     Post-change update of AGENTS.md + docs
+├── scheduled-tasks/             Headless Claude jobs run by macOS launchd
+│   ├── daily-mr-report/         Weekday 9:00 — appends GitLab MR digest to Daily/<today>.md
+│   └── weekly-knowledge-lint/   Monday 10:00 — lints Knowledge/ + Organization/, reports to Daily/
 └── .gitignore                   Allowlist — everything ignored unless explicitly permitted
 ```
 
@@ -67,15 +70,27 @@ Each subagent returns a short structured report; main integrates before the next
 3. **Surgical changes** — touch only what was asked. No unrelated refactors.
 4. **Goal-driven execution** — define success criteria up front, verify before claiming done.
 
-## Obsidian as cross-project library
+## Obsidian as cross-project library (five-layer model)
 
-`~/Obsidian/Work/` is not a per-repo scratch pad — it's a shared library across all work.
+`~/Obsidian/Work/` is not a per-repo scratch pad — it's a shared library across all work. The layout is inspired by [Andrej Karpathy's LLM Wiki pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f): raw sources feed persistent, LLM-maintained synthesis layers that compound over time instead of being re-derived per query.
 
-- **`Projects/<repo>/YYYY-MM-DD-<slug>.md`** — repo-specific plans and debug findings.
-- **`Knowledge/<topic>.md`** — reusable patterns, architectural decisions, things that cross-link 2+ repos.
-- **`Daily/YYYY-MM-DD.md`** — scratch.
+**Raw sources (LLM reads, rarely writes):**
+- **`Clippings/`** — external raw material: web articles (via Obsidian Web Clipper), papers, vendor docs, RFCs, post-mortems. **Immutable.**
+- **`Projects/<repo>/YYYY-MM-DD-<slug>.md`** — internal working notes per repo: plans, debug findings.
 
-Before implementing an Ops/Infra or Debug approach, Claude searches **both** `Projects/<current-repo>/` and `Knowledge/` — the same problem may already be solved in another repo. When a pattern repeats across 2+ repos, it gets promoted from a project note to `Knowledge/<topic>.md` with relative cross-links back to the source projects. The `architecture-review` skill flags **promotion candidates** during its post-implementation pass.
+**Synthesis (LLM-maintained wiki):**
+- **`Knowledge/<topic>.md`** — abstract, reusable patterns. **Own public git repo** (`Leonorus/knowlege` on GitHub), portable across jobs. Sanitized: no hostnames, internal URLs, tickets, employee names.
+- **`Organization/<topic>.md`** — org-specific architecture and conventions. Local-only.
+
+Each synthesis layer has an `index.md` (content catalog) and a `log.md` (append-only ingest/query/lint record).
+
+**Scratch:** `Daily/YYYY-MM-DD.md` — daily notes; also where scheduled-task reports land.
+
+**Ingest.** Two paths, same shape: (a) push from `Projects/` at end of task, (b) pull from `Clippings/` on demand. Both offer to propagate into `Knowledge/` and/or `Organization/`, update the target layer's `index.md`, and append to `log.md`. The `architecture-review` skill flags promotion candidates during its post-implementation pass.
+
+**Search before acting.** Before implementing an Ops/Infra or Debug approach, Claude searches `Projects/<current-repo>/`, `Knowledge/`, and `Organization/` — the same problem may already be solved in another repo, a general pattern, or an org-specific decision.
+
+**Lint.** Weekly (via `scheduled-tasks/weekly-knowledge-lint`) or on-demand: contradictions, orphan pages, missing cross-refs, ghost concepts, un-ingested clippings, and sanitization violations in `Knowledge/`.
 
 At the end of non-trivia tasks, Claude asks "Take a note for this?" with a one-line summary + target path. On yes, the note is written automatically — no draft-review round-trip. Trivial tasks and duplicates are skipped without asking.
 
@@ -95,7 +110,7 @@ If you already have customizations you want to keep, clone into a scratch direct
 
 ### Post-install one-time setup
 
-1. **Obsidian vault.** Create `~/Obsidian/Work/` with `Projects/`, `Daily/`, and `Knowledge/` subdirectories. Open the folder as a vault in the Obsidian desktop app.
+1. **Obsidian vault.** Create `~/Obsidian/Work/` with `Clippings/`, `Projects/`, `Knowledge/`, `Organization/`, and `Daily/` subdirectories. Open the folder as a vault in the Obsidian desktop app. For the `Knowledge/` layer, clone the public knowledge repo into it: `git clone git@github.com:Leonorus/knowlege.git ~/Obsidian/Work/Knowledge` (or your own fork).
 2. **Obsidian Local REST API plugin** (required by the `mcp/obsidian` Docker image). In Obsidian: Settings → Community plugins → Browse → install **Local REST API** → enable → copy its API key.
 3. **Export `OBSIDIAN_API_KEY`** in your shell env so the Docker container can pick it up. E.g. add to `~/.zshrc`:
    ```sh
@@ -107,6 +122,16 @@ If you already have customizations you want to keep, clone into a scratch direct
    docker pull zereight050/gitlab-mcp
    ```
 5. **(Optional) Edit paths in `settings.json`** if your home directory isn't `/Users/filipp.vysokov`. Look for absolute paths in the `statusLine` and `Stop` hook entries.
+6. **(Optional) Enable scheduled tasks.** Each job under `scheduled-tasks/` ships a macOS launchd plist next to its `run.sh`. To activate:
+   ```sh
+   # Edit the plist paths first if your $HOME is not /Users/filipp.vysokov,
+   # then install each one:
+   for p in ~/.claude/scheduled-tasks/*/com.filipp.*.plist; do
+     cp "$p" ~/Library/LaunchAgents/
+     launchctl load ~/Library/LaunchAgents/$(basename "$p")
+   done
+   ```
+   Remove any you don't want with `launchctl unload` + `rm ~/Library/LaunchAgents/com.filipp.<name>.plist`. Each task's `SKILL.md` documents what it does and where its report lands.
 
 ## Dependencies
 
