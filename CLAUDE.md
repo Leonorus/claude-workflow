@@ -15,7 +15,7 @@ Invoke the `classify-task` skill. Its verdict determines the bucket, workflow, a
 - **After implementation:** invoke `update-project-docs` to update `AGENTS.md` and affected in-repo docs.
 - **At end of task:** decide if a note is worth keeping. Ask the user: "Take a note for this?" with a one-line summary + target path. On yes, auto-write (no draft-review round-trip). Pick path:
   - Repo-specific plan or debug finding → `Projects/<repo>/YYYY-MM-DD-<slug>.md` (the *raw source*)
-  - Then, if reusable: propose promotion to `Knowledge/<topic>.md` (abstract, public) and/or `Organization/<topic>.md` (org-specific, local). See the ingest workflow below.
+  - Then, if reusable: propose promotion to `Knowledge/<topic>.md` (abstract, portable) and/or `Organization/<topic>.md` (org-specific, local). See the ingest workflow below.
 
   If the task is trivial or a duplicate of an existing note, skip the ask.
 
@@ -48,8 +48,8 @@ Vault at `~/Obsidian/Work/`. Five layers, inspired by [karpathy's LLM Wiki patte
 - **`Projects/<repo>/YYYY-MM-DD-<slug>.md`** — internal working notes per repo. Plans (`tags: [plan, <repo>]`, `status: draft|active|done`) and debug findings (`YYYY-MM-DD-debug-<slug>.md`, tags `[debug, <repo>]`). Editable while active; treated as sources once the task is done.
 
 **Synthesis (compiled knowledge — LLM-maintained):**
-- **`Knowledge/<topic>.md`** — abstract, reusable patterns (architectures, practices, debug recipes, tool notes). **Its own public git repo** at `Knowledge/.git/` (remote: `git@github.com:Leonorus/knowledge.git`, branch `main`), portable across jobs. **Sanitized**: no internal hostnames or URLs, ticket IDs, employee names, or org codenames. Frontmatter: `tags: [knowledge, <topic>]`.
-- **`Organization/<topic>.md`** — org-specific knowledge (architecture, service graph, conventions, runbooks). Local-only, not versioned. Links down to `Clippings/` and `Projects/` sources, up to `Knowledge/` patterns.
+- **`Knowledge/<topic>.md`** — abstract, reusable patterns (architectures, practices, debug recipes, tool notes). **Its own private git repo** at `Knowledge/.git/` (remote: `git@github.com:Leonorus/knowledge.git`, branch `main`), portable across jobs. **Kept abstract on purpose** so it stays useful at the next job — employer-specific detail (concrete architecture, service graph, team conventions, internal hostnames, ticket IDs, employee names, org codenames) belongs in `Organization/` instead. Frontmatter: `tags: [knowledge, <topic>]`, `last_verified: YYYY-MM-DD` (updated when the page is re-checked against current reality).
+- **`Organization/<topic>.md`** — org-specific knowledge (architecture, service graph, conventions, runbooks). Local-only, not versioned. Frontmatter: `tags: [organization, <topic>]`, `last_verified: YYYY-MM-DD`. Links down to `Clippings/` and `Projects/` sources, up to `Knowledge/` patterns.
 
 **Scratch:**
 - **`Daily/YYYY-MM-DD.md`** — daily notes; also where lint reports are appended.
@@ -60,7 +60,7 @@ Each synthesis layer (`Knowledge/`, `Organization/`) owns two special files:
 
 Prefer `mcp__obsidian__*` tools (`obsidian_append_content`, `obsidian_patch_content`, `obsidian_simple_search`) over raw Write/Read inside the vault. If Obsidian app isn't running, fall back to filesystem and tell the user — the vault is just markdown on disk.
 
-Never commit vault paths to an unrelated repo. `Knowledge/` has its own public remote; `Organization/` stays local.
+Never commit vault paths to an unrelated repo. `Knowledge/` has its own private remote (portable across jobs); `Organization/` stays local.
 
 ### Ingest workflows
 Two ingest paths — same output shape (updates to synthesis layers + index + log entry), different triggers.
@@ -77,11 +77,11 @@ Two ingest paths — same output shape (updates to synthesis layers + index + lo
 
 **Rules that apply to both paths:**
 - A single source may touch multiple pages in each layer. On promote: update the target page(s), update the target layer's `index.md`, append a source-linked entry to its `log.md`.
-- **Sanitization check before writing to `Knowledge/`**: scan for internal hostnames and URLs, ticket IDs, employee names, and org codenames. If found, either rephrase generically or divert that content to `Organization/` instead.
+- **Abstract-pattern test before writing to `Knowledge/`**: a page earns a spot in `Knowledge/` only if it could plausibly apply to 5+ different employers. If it describes *this* employer's architecture, service graph, or team conventions, divert to `Organization/`. Proper nouns (internal hostnames and URLs, ticket IDs, employee names, org codenames) are the first tell that a page has drifted out of the abstract layer; either rephrase generically or divert.
 - Every synthesis page that cites a source must use a relative link (e.g. `[[Clippings/foo.md]]` or `[[Projects/<repo>/2026-04-18-debug-x.md]]`), so Obsidian's graph view shows the source trail.
 
 ### Lint pass (user-triggered + weekly cron)
-On request (`lint knowledge` / `lint organization`), or automatically Mondays 10:00 local via the `com.filipp.weekly-knowledge-lint` launchd agent, scan the synthesis layers for: contradictions between pages, stale claims newer sources have superseded, orphan pages (no inbound links), missing cross-references between related pages, concepts frequently mentioned but lacking their own page. Also flag **un-ingested clippings** — files in `Clippings/` not referenced by any page in `Knowledge/` or `Organization/`. Report findings to `Daily/<today>.md`; act only on approval; log the pass in each synthesis layer's `log.md`.
+On request (`lint knowledge` / `lint organization`), or automatically Mondays 10:00 local via the `com.filipp.weekly-knowledge-lint` launchd agent, scan the synthesis layers for: contradictions between pages, stale claims newer sources have superseded, **pages whose `last_verified` is older than 12 months**, orphan pages (no inbound links), missing cross-references between related pages, concepts frequently mentioned but lacking their own page. Also flag **un-ingested clippings** — files in `Clippings/` not referenced by any page in `Knowledge/` or `Organization/`. Report findings to `Daily/<today>.md`; act only on approval; log the pass in each synthesis layer's `log.md`.
 
 ### Cross-project library behavior
 Obsidian is a shared library across all work, not a per-repo scratchpad. Architecturally linked projects may solve the same problem differently — use the synthesis layers to unify designs. Prefer linking existing pages over duplicating content. Raise repeating patterns and cross-repo design smells as proposals; don't execute in silence.
