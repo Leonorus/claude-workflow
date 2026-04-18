@@ -1,0 +1,24 @@
+#!/usr/bin/env zsh
+set -euo pipefail
+
+# launchd skips /etc/zprofile — run path_helper ourselves so /usr/local/bin
+# (where Docker Desktop lives) is on PATH before we spawn docker-based MCPs.
+[ -x /usr/libexec/path_helper ] && eval "$(/usr/libexec/path_helper -s)"
+
+# Pull in OBSIDIAN_API_KEY, GITLAB_PERSONAL_ACCESS_TOKEN, etc.
+[ -f "$HOME/.zshrc" ] && source "$HOME/.zshrc"
+
+ROOT="$HOME/.claude/scheduled-tasks/daily-mr-report"
+LOG_DIR="$ROOT/logs"
+mkdir -p "$LOG_DIR"
+
+cd "$ROOT"
+
+# Strip YAML frontmatter (---...--- at top) so claude doesn't parse it as a CLI option
+PROMPT="$(awk 'BEGIN{f=0} /^---$/ {if(f<2){f++; next}} f>=2 {print}' "$ROOT/SKILL.md")"
+
+printf '%s' "$PROMPT" | exec /Users/filipp.vysokov/.local/bin/claude \
+  -p \
+  --output-format text \
+  --dangerously-skip-permissions \
+  --model claude-sonnet-4-6

@@ -142,6 +142,21 @@ If you already have customizations you want to keep, clone into a scratch direct
 - **[Obsidian](https://obsidian.md/)** — required for plans/notes routing and the Obsidian MCP.
 - **[Obsidian Local REST API plugin](https://github.com/coddingtonbear/obsidian-local-rest-api)** — bridge between Obsidian and the MCP server.
 
+### Homebrew tools
+
+Both are wired in via this config — `rtk` as a `PreToolUse` hook in `settings.json`, `engram` as a Claude Code plugin providing the `mem_*` memory tools.
+
+```sh
+# RTK — Rust Token Killer, CLI proxy for 60–90% token savings on dev ops
+brew install rtk
+
+# Engram — persistent memory for AI coding agents (survives across sessions)
+brew install gentleman-programming/tap/engram
+```
+
+- **[rtk](https://www.rtk-ai.app/)** — filters verbose output from git/docker/npm/etc. before it enters the context window. See the `## Token optimization (RTK)` section below and `RTK.md`.
+- **[engram](https://github.com/Gentleman-Programming/engram)** — agent-agnostic persistent memory, single binary. Provides `mem_save` / `mem_search` / `mem_context` and related tools (active protocol runs at every SessionStart; the plugin's skill enforces proactive saves on decisions, bug fixes, and conventions).
+
 ### MCP servers (all Docker-based)
 
 - [`mcp/sequentialthinking`](https://hub.docker.com/r/mcp/sequentialthinking) — complex multi-step reasoning.
