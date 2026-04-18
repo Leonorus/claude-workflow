@@ -103,10 +103,16 @@ mv ~/.claude ~/.claude.backup.$(date +%Y%m%d)
 # 2. Clone this repo as your new ~/.claude/
 git clone git@github.com:Leonorus/claude-workflow.git ~/.claude
 
-# 3. Restart Claude Code so settings.json and mcp.json are re-read
+# 3. Merge MCP servers into ~/.claude.json (Claude Code does NOT read ~/.claude/mcp.json)
+~/.claude/install.sh
+
+# 4. Restart Claude Code so settings.json and ~/.claude.json are re-read
 ```
 
 If you already have customizations you want to keep, clone into a scratch directory and merge by hand.
+
+### What `install.sh` does
+Claude Code reads user-scope MCP servers from `~/.claude.json` — **not** from `~/.claude/mcp.json` inside this repo. `install.sh` merges the servers declared in `mcp.json` into `~/.claude.json` (backing it up first), so the servers this config assumes (`sequentialthinking`, `context7`, `gitlab`, `obsidian`, `fetch`) actually get loaded. Re-run after editing `mcp.json`. Requires `jq` (`brew install jq`).
 
 ### Post-install one-time setup
 

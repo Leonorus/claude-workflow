@@ -29,7 +29,12 @@ Invoke the `classify-task` skill. Its verdict determines the bucket, workflow, a
 - **Surgical changes** — touch only what was asked. No unrelated refactors, no "while I'm here" cleanup.
 - **Goal-driven** — define success criteria up front, verify before claiming done.
 
-## Skills — do not use
+## Skills — toolbox, not governance
+Governance = this file + custom skills (`classify-task`, the four principles, `architecture-review`, `update-project-docs`). Plugins (`superpowers:*`, `engram:*`, `remember:*`, `claude-md-management:*`) are a **toolbox** — invoke when a specific tool fits, not as mandatory always-on gates. If a plugin skill's "ALWAYS ACTIVE" protocol contradicts `classify-task` or the four principles, `classify-task` wins.
+
+`superpowers:brainstorming` / `writing-plans` / `test-driven-development` / `systematic-debugging` / `verification-before-completion` / `requesting-code-review` / `receiving-code-review` / `finishing-a-development-branch` are good tools. They fire when `classify-task` routes into a bucket that calls for them, not on every turn.
+
+### Do not use
 - `superpowers:using-git-worktrees` — user does not use worktrees. Never invoke it, even if another skill suggests it. Work directly in the current checkout.
 - Any mandatory task-tracker skill (beads, template-bridge:unified-workflow) — these plugins are removed. Do not hallucinate their commands.
 
@@ -112,7 +117,8 @@ Host may inject additional MCPs (e.g. `github`, `dockerhub`, `filesystem`, `comp
 ## Security
 - Never commit secrets. `OBSIDIAN_API_KEY` lives in shell env (`~/.zshrc`), not in `~/.claude.json`.
 - Refuse destructive ops (`git reset --hard`, force push, `rm -rf` on unknown state) without explicit user confirmation.
-- **Never fetch GitLab CI/CD variables** (project, group, or environment-scoped) via any `mcp__gitlab__*` tool without explicit user permission — they typically contain secrets. Metadata-only operations (pipelines, jobs, code, MRs) are fine without asking.
+- **GitLab CI/CD variable tools are denied at the permission layer** (`mcp__gitlab__*variable*` in `settings.json` → `permissions.deny`). They typically contain secrets; use the GitLab UI if you need to inspect them.
+- **GitLab writes are denied by default** (`create_*`, `update_*`, `delete_*`, `merge_*`, `approve_*`, `push_*`, etc. in `settings.json` → `permissions.deny`). Remote mutations go through shell `git` / `glab` with explicit user approval, not through the MCP.
 
 ---
 # userEmail

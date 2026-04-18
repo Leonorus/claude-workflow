@@ -15,6 +15,7 @@
 !mcp.json
 !statusline-command.sh
 !auto-sync.sh
+!install.sh
 
 # Allow the skills directory and nested SKILL.md files
 !skills/
