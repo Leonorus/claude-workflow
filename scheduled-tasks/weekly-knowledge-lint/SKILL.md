@@ -36,7 +36,7 @@ For each layer, identify:
 
 **F. Ghost concepts** — concepts/terms mentioned in 3+ pages that lack their own page.
 
-**G. Sanitization (Knowledge/ only)** — scan every `Knowledge/*.md` for org-specific tokens: hostnames (`*.tl-lan.ru`, any internal FQDN), internal URLs, ticket IDs (e.g. `DEVOPS-1234`, `INFRADESK-\d+`), employee names/usernames, org codenames. Report `path:line` with the offending snippet.
+**G. Sanitization (Knowledge/ only)** — scan every `Knowledge/*.md` for org-specific tokens: internal hostnames and FQDNs, internal URLs, ticket IDs (project-prefixed like `PROJ-1234`), employee names/usernames, org codenames. Report `path:line` with the offending snippet.
 
 **H. Un-ingested clippings (global, reported once)** — list every file in `Clippings/` (recursive) that is NOT referenced by any page in `Knowledge/` or `Organization/`. Check for references by filename substring match (both bare `foo.md` and `[[Clippings/foo]]` forms). Report each un-ingested clipping with its relative path under `Clippings/`.
 

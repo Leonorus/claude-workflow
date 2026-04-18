@@ -28,6 +28,10 @@
 !hooks/
 !hooks/*.sh
 
+# Allow custom agent definitions (referenced by classify-task dispatch rules)
+!agents/
+!agents/*.md
+
 # Allow scheduled-tasks (launchd jobs) — each with its SKILL.md, run.sh, and plist.
 # Per-task logs/ and transient state are blocked by the default `*` rule.
 !scheduled-tasks/

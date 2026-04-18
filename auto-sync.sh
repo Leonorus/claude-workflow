@@ -21,8 +21,10 @@ sync_workflow() {
     mcp.json \
     statusline-command.sh \
     auto-sync.sh \
+    install.sh \
     skills \
     hooks \
+    agents \
     scheduled-tasks \
     >/dev/null 2>&1
 
