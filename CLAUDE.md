@@ -48,7 +48,7 @@ Vault at `~/Obsidian/Work/`. Five layers, inspired by [karpathy's LLM Wiki patte
 - **`Projects/<repo>/YYYY-MM-DD-<slug>.md`** — internal working notes per repo. Plans (`tags: [plan, <repo>]`, `status: draft|active|done`) and debug findings (`YYYY-MM-DD-debug-<slug>.md`, tags `[debug, <repo>]`). Editable while active; treated as sources once the task is done.
 
 **Synthesis (compiled knowledge — LLM-maintained):**
-- **`Knowledge/<topic>.md`** — abstract, reusable patterns (architectures, practices, debug recipes, tool notes). **Its own public git repo** at `Knowledge/.git/` (remote: `git@github.com:Leonorus/knowlege.git`, branch `main`), portable across jobs. **Sanitized**: no internal hostnames or URLs, ticket IDs, employee names, or org codenames. Frontmatter: `tags: [knowledge, <topic>]`.
+- **`Knowledge/<topic>.md`** — abstract, reusable patterns (architectures, practices, debug recipes, tool notes). **Its own public git repo** at `Knowledge/.git/` (remote: `git@github.com:Leonorus/knowledge.git`, branch `main`), portable across jobs. **Sanitized**: no internal hostnames or URLs, ticket IDs, employee names, or org codenames. Frontmatter: `tags: [knowledge, <topic>]`.
 - **`Organization/<topic>.md`** — org-specific knowledge (architecture, service graph, conventions, runbooks). Local-only, not versioned. Links down to `Clippings/` and `Projects/` sources, up to `Knowledge/` patterns.
 
 **Scratch:**

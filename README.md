@@ -79,7 +79,7 @@ Each subagent returns a short structured report; main integrates before the next
 - **`Projects/<repo>/YYYY-MM-DD-<slug>.md`** — internal working notes per repo: plans, debug findings.
 
 **Synthesis (LLM-maintained wiki):**
-- **`Knowledge/<topic>.md`** — abstract, reusable patterns. **Own public git repo** (`Leonorus/knowlege` on GitHub), portable across jobs. Sanitized: no hostnames, internal URLs, tickets, employee names.
+- **`Knowledge/<topic>.md`** — abstract, reusable patterns. **Own public git repo** (`Leonorus/knowledge` on GitHub), portable across jobs. Sanitized: no hostnames, internal URLs, tickets, employee names.
 - **`Organization/<topic>.md`** — org-specific architecture and conventions. Local-only.
 
 Each synthesis layer has an `index.md` (content catalog) and a `log.md` (append-only ingest/query/lint record).
@@ -116,7 +116,7 @@ Claude Code reads user-scope MCP servers from `~/.claude.json` — **not** from 
 
 ### Post-install one-time setup
 
-1. **Obsidian vault.** Create `~/Obsidian/Work/` with `Clippings/`, `Projects/`, `Knowledge/`, `Organization/`, and `Daily/` subdirectories. Open the folder as a vault in the Obsidian desktop app. For the `Knowledge/` layer, clone the public knowledge repo into it: `git clone git@github.com:Leonorus/knowlege.git ~/Obsidian/Work/Knowledge` (or your own fork).
+1. **Obsidian vault.** Create `~/Obsidian/Work/` with `Clippings/`, `Projects/`, `Knowledge/`, `Organization/`, and `Daily/` subdirectories. Open the folder as a vault in the Obsidian desktop app. For the `Knowledge/` layer, clone the public knowledge repo into it: `git clone git@github.com:Leonorus/knowledge.git ~/Obsidian/Work/Knowledge` (or your own fork).
 2. **Obsidian Local REST API plugin** (required by the `mcp/obsidian` Docker image). In Obsidian: Settings → Community plugins → Browse → install **Local REST API** → enable → copy its API key.
 3. **Export `OBSIDIAN_API_KEY`** in your shell env so the Docker container can pick it up. E.g. add to `~/.zshrc`:
    ```sh
