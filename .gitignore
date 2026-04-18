@@ -39,6 +39,7 @@
 !scheduled-tasks/*/SKILL.md
 !scheduled-tasks/*/run.sh
 !scheduled-tasks/*/*.plist
+!scheduled-tasks/*/*.py
 
 # --- Hard-block things that must never leak, even if the above allowlist
 # would otherwise include them ---
