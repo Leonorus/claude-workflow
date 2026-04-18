@@ -48,7 +48,7 @@ Vault at `~/Obsidian/Work/`. Five layers, inspired by [karpathy's LLM Wiki patte
 - **`Projects/<repo>/YYYY-MM-DD-<slug>.md`** — internal working notes per repo. Plans (`tags: [plan, <repo>]`, `status: draft|active|done`) and debug findings (`YYYY-MM-DD-debug-<slug>.md`, tags `[debug, <repo>]`). Editable while active; treated as sources once the task is done.
 
 **Synthesis (compiled knowledge — LLM-maintained):**
-- **`Knowledge/<topic>.md`** — abstract, reusable patterns (architectures, practices, debug recipes, tool notes). **Its own public git repo** at `Knowledge/.git/` (remote: `git@github.com:Leonorus/knowlege.git`, branch `main`), portable across jobs. **Sanitized**: no hostnames, internal URLs, `tl-lan.ru`, ticket IDs, employee names, or org codenames. Frontmatter: `tags: [knowledge, <topic>]`.
+- **`Knowledge/<topic>.md`** — abstract, reusable patterns (architectures, practices, debug recipes, tool notes). **Its own public git repo** at `Knowledge/.git/` (remote: `git@github.com:Leonorus/knowlege.git`, branch `main`), portable across jobs. **Sanitized**: no internal hostnames or URLs, ticket IDs, employee names, or org codenames. Frontmatter: `tags: [knowledge, <topic>]`.
 - **`Organization/<topic>.md`** — org-specific knowledge (architecture, service graph, conventions, runbooks). Local-only, not versioned. Links down to `Clippings/` and `Projects/` sources, up to `Knowledge/` patterns.
 
 **Scratch:**
@@ -77,7 +77,7 @@ Two ingest paths — same output shape (updates to synthesis layers + index + lo
 
 **Rules that apply to both paths:**
 - A single source may touch multiple pages in each layer. On promote: update the target page(s), update the target layer's `index.md`, append a source-linked entry to its `log.md`.
-- **Sanitization check before writing to `Knowledge/`**: scan for hostnames, internal URLs, `tl-lan.ru`, ticket IDs, employee names, and org codenames. If found, either rephrase generically or divert that content to `Organization/` instead.
+- **Sanitization check before writing to `Knowledge/`**: scan for internal hostnames and URLs, ticket IDs, employee names, and org codenames. If found, either rephrase generically or divert that content to `Organization/` instead.
 - Every synthesis page that cites a source must use a relative link (e.g. `[[Clippings/foo.md]]` or `[[Projects/<repo>/2026-04-18-debug-x.md]]`), so Obsidian's graph view shows the source trail.
 
 ### Lint pass (user-triggered + weekly cron)
@@ -106,7 +106,7 @@ Use `AGENTS.md` (not `CLAUDE.md`) for project-level instructions. Migrate any ex
 ## MCP priority (user-scope servers live in `~/.claude.json` under `mcpServers`; `~/.claude/mcp.json` is NOT read by Claude Code)
 - `sequentialthinking` — complex multi-step reasoning, architecture decisions
 - `context7` — docs/examples for unfamiliar libraries (call `resolve-library-id` first)
-- `gitlab` — all ops against `gitlab.tl-lan.ru`; prefer over `git` CLI for remote interactions
+- `gitlab` — all ops against the configured GitLab host; prefer over `git` CLI for remote interactions
 - `obsidian` — all reads/writes to `~/Obsidian/Work/`; prefer over raw Write/Read
 - `fetch` — fetching URLs; **prefer over any host-provided WebFetch** (reaches more sites, cleaner markdown)
 
@@ -119,9 +119,5 @@ Host may inject additional MCPs (e.g. `github`, `dockerhub`, `filesystem`, `comp
 - Refuse destructive ops (`git reset --hard`, force push, `rm -rf` on unknown state) without explicit user confirmation.
 - **GitLab CI/CD variable tools are denied at the permission layer** (`mcp__gitlab__*variable*` in `settings.json` → `permissions.deny`). They typically contain secrets; use the GitLab UI if you need to inspect them.
 - **GitLab writes are denied by default** (`create_*`, `update_*`, `delete_*`, `merge_*`, `approve_*`, `push_*`, etc. in `settings.json` → `permissions.deny`). Remote mutations go through shell `git` / `glab` with explicit user approval, not through the MCP.
-
----
-# userEmail
-leonoruseu@gmail.com
 
 @RTK.md

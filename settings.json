@@ -5,6 +5,14 @@
       "Bash(docker pull *)",
       "Bash(docker run *)",
       "Bash(rtk *)",
+      "Bash(find *)",
+      "Bash(python3 *)",
+      "Bash(brew list *)",
+      "Bash(brew info *)",
+      "Bash(brew tap *)",
+      "Bash(launchctl list *)",
+      "Bash(crontab -l)",
+      "Bash(log show *)",
       "Skill(update-config)",
       "mcp__github",
       "mcp__obsidian",
@@ -114,6 +122,17 @@
           {
             "type": "command",
             "command": "rtk hook claude"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh /Users/filipp.vysokov/.claude/hooks/classify-task-reminder.sh",
+            "timeout": 5
           }
         ]
       }

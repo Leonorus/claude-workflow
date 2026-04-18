@@ -20,6 +20,22 @@ First move on any request. Decides how much process to apply, and threads the us
 | **Research / Exploration** | "how does X work", "what's in this repo", "compare A vs B" — no bug, no code change | **Dispatch `research` agent (Sonnet).** Read, investigate, report. Write findings to `Knowledge/<topic>.md` if the topic is cross-project, else `Projects/<repo>/<date>-<slug>.md`. No workflow weight. |
 | **Ambiguous** | 2+ buckets fit, or scope is unclear | **Stay on main (Opus). Ask the user** which bucket + scope. Do not guess. |
 
+## Model tier per bucket
+
+Main-agent model is set to Opus in `settings.json` — right for Heavy Ops, Debug, Ambiguous, and app-code orchestration. For the lighter buckets, lean on subagent dispatch to right-size cost:
+
+| Bucket | Main-agent model | Notes |
+|---|---|---|
+| **Trivia** | Opus (stays on main) | If the task is a true typo and `/fast` mode (Opus 4.6) is available, suggest it to the user for the cheapest path. Don't re-route through an agent — orchestration overhead > the fix. |
+| **Light Ops** | Opus (orchestration only) | **All real work dispatched to `light-ops` agent (Sonnet).** Main agent only integrates, commits, and offers MR. |
+| **Heavy Ops** | Opus | Correct tier. Fan out read-only leaves (Haiku) per the subagent rule below. |
+| **Go/Python app** | Opus (orchestration) | Implementation leaves go to `implementation-leaf` (Sonnet). |
+| **Go/Python script** | Opus (orchestration only) | Actual edit goes to `script-work` agent (Sonnet). |
+| **Debug** | Opus | Correct tier. |
+| **Research** | Opus (dispatch only) | All reading goes to `research` agent (Sonnet). Main agent synthesizes. |
+
+If a bucket's real work is happening on main Opus when the table says it should be on a Sonnet agent, **dispatch the agent** — don't re-derive it on Opus.
+
 ## Procedure
 
 1. Read the user's message end-to-end, including any pasted stack traces, file paths, or ticket references.

@@ -205,6 +205,7 @@ This workflow is a synthesis of ideas from people who published their own reason
 ## Caveats
 
 - **Paths are machine-local.** `settings.json`, `auto-sync.sh`, and a few other files contain absolute paths under `/Users/filipp.vysokov/`. If you fork, either edit them or set up your own home directory to match.
+- **Auto-sync pushes without review.** The `Stop` hook commits and pushes every tracked change in `~/.claude/` after each Claude turn. A buggy hook or an edit Claude made that you didn't notice can land on your remote before you see it. For a personal config this is fine; if you publish a fork, consider disabling the `Stop` hook (`settings.json` → `hooks.Stop`) and committing manually.
 - **Opinionated.** The taxonomy reflects how *I* work (mostly DevOps/infra, occasional Go/Python app code, frequent debug). Your buckets may differ. Edit `CLAUDE.md` and `skills/classify-task/SKILL.md` to match your reality.
 - **Free to use for anyone, everywhere.** Reuse, fork, or adapt any part of this repo — no restrictions. Suggestions and contributions via issues are welcomed.
 
