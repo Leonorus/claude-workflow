@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.filipp.clippings-watcher</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/filipp.vysokov/.claude/scheduled-tasks/clippings-watcher/run.sh</string>
+    </array>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>HOME</key>
+        <string>/Users/filipp.vysokov</string>
+    </dict>
+
+    <key>WatchPaths</key>
+    <array>
+        <string>/Users/filipp.vysokov/Obsidian/Work/Clippings</string>
+    </array>
+
+    <key>ThrottleInterval</key>
+    <integer>30</integer>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/filipp.vysokov/.claude/scheduled-tasks/clippings-watcher/logs/stdout.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/filipp.vysokov/.claude/scheduled-tasks/clippings-watcher/logs/stderr.log</string>
+</dict>
+</plist>

@@ -16,7 +16,7 @@ Invoke the `classify-task` skill. Its verdict determines the bucket, workflow, a
 - **At end of task:**
   - **Heavy Ops and Debug** (when a fix shipped, or investigation produced concrete findings): auto-write the raw note to `Projects/<repo>/YYYY-MM-DD-<slug>.md` — no "Take a note?" ask. Raw capture is cheap; the synthesis layer benefits from a steady source signal.
   - **All other non-trivia buckets:** ask "Take a note for this?" with a one-line summary + `Projects/<repo>/YYYY-MM-DD-<slug>.md` target. On yes, auto-write.
-  - **Then, regardless of bucket:** if the raw note contains a genuinely reusable pattern, propose promotion to `Knowledge/<topic>.md` (abstract, portable) and/or `Organization/<topic>.md` (org-specific, local). The promotion ask stays gated — synthesis writes earn their keep. See the ingest workflow below.
+  - **Then, regardless of bucket:** if the raw note contains a genuinely reusable pattern, propose promotion to `Knowledge/<topic>.md` (abstract, portable) and/or `Organization/<topic>.md` (org-specific, local). Promotions from `Projects/` stay gated — synthesis writes earn their keep. (Clippings/ are auto-ingested without an approval step — see Path B below.) See the ingest workflow below.
   - Skip the raw-note write only if the task is a duplicate of an existing note or genuinely trivial.
 
 **Consult Obsidian for Ops/Infra and Debug.** SessionStart injects a vault index. Before proposing an approach, search `Projects/<current-repo>/`, `Knowledge/`, and `Organization/` — the same problem may be solved in another repo, or be documented as a general pattern or an org-specific decision. Use direct keyword overlap (component names, hostnames, error strings); never cite tangentially-related notes. Confirm with `mcp__obsidian__obsidian_simple_search`, read with `mcp__obsidian__obsidian_get_file_contents`.
@@ -73,7 +73,7 @@ Two ingest paths — same output shape (updates to synthesis layers + index + lo
 >
 > Promote, skip, or edit?
 
-**B. Pull from `Clippings/` (on demand).** When the user asks to ingest a clipping (by name, or "ingest new clippings"), read the clipped file, summarize the key takeaways, then propose the same propagation format. Never modify the clipping itself — link to it from the synthesis pages instead.
+**B. Auto-ingest from `Clippings/` (launchd-watched).** The act of adding a file to `Clippings/` is the approval — a `com.filipp.clippings-watcher` launchd agent with `WatchPaths` fires on add/modify, runs `~/.claude/scheduled-tasks/clippings-watcher/run.sh`, and that invokes a headless `claude -p` whose `SKILL.md` is authoritative. The LLM classifies each clipping as `Knowledge/`, `Organization/`, or skip (with a short reason logged to `Daily/<today>.md`) and writes directly — no human-approval step. Gating is enforced inside the SKILL.md refusal rules (abstract-pattern test for `Knowledge/`, update-over-create, immutability of clippings). If you ever need to ingest on-demand, dropping the file into `Clippings/` triggers the same flow; never modify the clipping itself — link to it from the synthesis pages instead. This carve-out applies only to `Clippings/`; promotions from `Projects/` remain gated via Path A.
 
 **Rules that apply to both paths:**
 - A single source may touch multiple pages in each layer. On promote: update the target page(s), update the target layer's `index.md`, append a source-linked entry to its `log.md`.
