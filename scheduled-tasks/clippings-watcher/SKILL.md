@@ -59,6 +59,7 @@ Tools:
 Update `<layer>/index.md`:
 - Use `mcp__obsidian__obsidian_patch_content` to add the new page under its category (or create a category heading if none fits).
 - One line: `- [[<topic>]] — <one-line description>`.
+- **Placeholder handling**: if the target category currently has `_none yet_` as its only content, REPLACE that placeholder line with the new page line. Never create a duplicate category heading; never leave `_none yet_` in a category that now has entries.
 
 Append to `<layer>/log.md`:
 ```
