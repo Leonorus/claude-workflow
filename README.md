@@ -167,10 +167,14 @@ brew install gentleman-programming/tap/engram
 
 ### Claude Code plugins
 
+Plugins come from two marketplaces, both registered under `extraKnownMarketplaces` in `settings.json` and enabled via `enabledPlugins`. Claude Code installs them on first run after the settings are read.
+
 - [`anthropics/claude-plugins-official`](https://github.com/anthropics/claude-plugins-official) — enables:
   - [`superpowers`](https://github.com/obra/superpowers) — the skills library this workflow treats as a reusable toolbox (brainstorming, writing-plans, test-driven-development, systematic-debugging, verification-before-completion, requesting-code-review, receiving-code-review, finishing-a-development-branch).
   - `remember` — session-boundary state.
   - `claude-md-management` — auditing project-level AGENTS.md files.
+- [`Gentleman-Programming/engram`](https://github.com/Gentleman-Programming/engram) — enables:
+  - `engram` — persistent memory plugin. Registers the `engram` MCP server and the `mem_*` tool suite (`mem_save`, `mem_search`, `mem_context`, `mem_session_summary`, …). Requires the `engram` binary to be installed via Homebrew (see above). A SessionStart protocol makes saves proactive on decisions, bug fixes, and conventions.
 
 ## Token optimization (RTK)
 
