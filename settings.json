@@ -66,7 +66,6 @@
       "mcp__gitlab__*variable*"
     ]
   },
-  "model": "opus",
   "hooks": {
     "SessionStart": [
       {
