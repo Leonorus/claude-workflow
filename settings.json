@@ -161,5 +161,6 @@
       }
     }
   },
-  "tui": "fullscreen"
+  "tui": "fullscreen",
+  "model": "opus"
 }
