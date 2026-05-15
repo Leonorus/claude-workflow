@@ -1,115 +1,81 @@
 ---
 name: classify-task
-description: Use at the very start of any user request, before invoking other skills or writing any code. Classifies the request into one of the workflow buckets (trivia, ops/infra, go-python-app, go-python-script, debug, research, ambiguous) and applies the matching weight. Asks the user if classification is uncertain.
+description: Fallback workflow classifier for Claude Code when Workflow MCP is unavailable or obviously wrong. For substantial software/ops/debug/research/repo-maintenance, prefer Workflow MCP start_task first.
 ---
 
 # Classify task
 
-First move on any request. Decides how much process to apply, and threads the user's preference for insights into every step. Without this, you default to either "heavy workflow on everything" (wasteful) or "no structure" (chaotic).
+Use this skill as the human-readable fallback when Workflow MCP is unavailable,
+stale, or clearly wrong. If `mcp__workflow__start_task` is available, call it
+instead and follow its returned contract/checklist.
 
-## The buckets
+## Start rule
 
-| Bucket | Signals | Weight applied |
+For non-trivia work, state one short visible sentence:
+
+`Bucket: <bucket> — <why>; applying <matching workflow weight>.`
+
+Skip only for casual chat, pure trivia, or clear follow-ups to an already
+classified task in this conversation.
+
+## Buckets
+
+| Bucket | Signals | Flow |
 |---|---|---|
-| **Trivia** | typo, one-char rename, single-line config tweak, obvious doc fix | Just do it. No brainstorm, no plan, no arch review, no doc update. |
-| **Light Ops** | Ansible/Terraform/k8s/CI/Docker change that is: single file, <~50 diff lines, no prod-boundary touch, no new role/module/stack, no architectural shift | **Dispatch `light-ops` agent (Sonnet)** for the edit + lint. Then in main: (dry-run only if touching prod vars/state) → commit → offer MR. No brainstorm, no arch review. Surface insights if noticed. |
-| **Heavy Ops** | Ops change with any of: multi-file, prod-boundary touch (prod vars, live cluster, secrets, network/security rules), new role/module/stack, architectural shift, or same pattern exists in 2+ repos | **Stay on main (Opus).** Deep-dive: brainstorm → Obsidian check (`Knowledge/` + `Projects/`) → writing-plans → implement → lint/validate → **mandatory dry-run gate** → architecture-review → apply → commit → MR → update-project-docs → propose Obsidian note. **Fan out read-only leaves to subagents (see section below).** |
-| **Go / Python app code** | project has `go.mod` or `pyproject.toml`, has `tests/` or `_test.go`, multiple packages/modules | **Stay on main (Opus) for orchestration.** Full app pipeline: brainstorm → writing-plans → **TDD** (red-green-refactor, fan out independent slices via `implementation-leaf` Sonnet agents) → requesting-code-review → architecture-review → verification-before-completion → update-project-docs. |
-| **Go / Python script** | single file, <~100 lines, glue/automation, no tests dir, run-once or cron | **Dispatch `script-work` agent (Sonnet).** Short plan if non-trivial. No TDD — manual smoke test. Arch review if it's not one-off. update-project-docs. |
-| **Debug** | bug report, test failure, stack trace provided, "why is X broken", unexpected behavior | **Stay on main (Opus).** `systematic-debugging`: hypothesis → minimal repro → instrument → targeted fix → verify. No speculative fixes. If a fix ships: arch-review + verify + update-project-docs. Investigation-only: findings go to Obsidian (`Knowledge/` if reusable, else `Projects/<repo>/`). |
-| **Research / Exploration** | "how does X work", "what's in this repo", "compare A vs B" — no bug, no code change | **Dispatch `research` agent (Sonnet).** Read, investigate, report. Write findings to `Knowledge/<topic>.md` if the topic is cross-project, else `Projects/<repo>/<date>-<slug>.md`. No workflow weight. |
-| **Ambiguous** | 2+ buckets fit, or scope is unclear | **Stay on main (Opus). Ask the user** which bucket + scope. Do not guess. |
+| Trivia | Typo, one-line obvious doc/config fix, mechanical rename | Just do it. No plan, no note, no subagent. |
+| Light Ops | Single-file Ansible/Terraform/k8s/CI/Docker, small diff, no direct prod/secret/network/apply boundary, no new role/module/stack | Inspect nearby convention -> edit surgically -> run targeted lint/fmt/check -> summarize. |
+| Heavy Ops | Multi-file ops, actual prod boundary, secrets/network/security, new role/module/stack, architectural shift, repeated pattern | Name blast radius/assumptions/rollback or dry-run path -> consult Workflow/Obsidian context -> plan -> implement -> lint/validate/render/dry-run/smoke -> docs/note. |
+| App Code | Behavior/API/module change, tests present, multiple packages/modules | Define success and existing test shape -> add/run targeted failing test where practical -> implement -> targeted tests -> docs if behavior changed. |
+| Script | Single-file glue/automation/hook/cron/LaunchAgent/local service, no app harness | Define input/output/exit codes/idempotency/side effects -> inspect runtime conventions -> minimal edit -> syntax check + safe smoke test. |
+| Debug | Bug report, failing test, stack trace, unexpected behavior | Reproduce/observe exact failure -> name falsifiable hypotheses -> inspect/instrument -> fix cause -> verify exact failure is gone. |
+| Research | How does X work, compare options, repo exploration, no code change | State question/evidence bar -> read sources/notes -> report facts, assumptions, recommendation, confidence, risks, next checks. |
+| Repo-maintenance | Dependency/CI/docs/tests/release/config hygiene | Check status/diff -> inspect affected convention -> edit surgically -> run affected validation -> update docs/notes if conventions changed. |
+| Ambiguous | Multiple buckets fit or scope changes tool choice | Ask one concise clarifying question, or proceed only with an explicit low-risk assumption. |
 
-## Model tier per bucket
+Escalate Light Ops to Heavy Ops if the diff grows beyond roughly 50 lines,
+spreads across files, touches actual prod/secrets/network/runtime state, reveals
+a deeper design issue, or repeats across multiple repos. Do not classify a task
+as Heavy Ops from the word "prod" alone when the change is only CI/list/matrix
+wiring with variable names/placeholders and no secret values, runtime config,
+RBAC, network policy, Terraform/Ansible state, Helm values, or direct deploy.
 
-Main-agent model is set to Opus in `settings.json` — right for Heavy Ops, Debug, Ambiguous, and app-code orchestration. For the lighter buckets, lean on subagent dispatch to right-size cost:
+## Subagents
 
-| Bucket | Main-agent model | Notes |
-|---|---|---|
-| **Trivia** | Opus (stays on main) | If the task is a true typo and `/fast` mode (Opus 4.6) is available, suggest it to the user for the cheapest path. Don't re-route through an agent — orchestration overhead > the fix. |
-| **Light Ops** | Opus (orchestration only) | **All real work dispatched to `light-ops` agent (Sonnet).** Main agent only integrates, commits, and offers MR. |
-| **Heavy Ops** | Opus | Correct tier. Fan out read-only leaves (Haiku) per the subagent rule below. |
-| **Go/Python app** | Opus (orchestration) | Implementation leaves go to `implementation-leaf` (Sonnet). |
-| **Go/Python script** | Opus (orchestration only) | Actual edit goes to `script-work` agent (Sonnet). |
-| **Debug** | Opus | Correct tier. |
-| **Research** | Opus (dispatch only) | All reading goes to `research` agent (Sonnet). Main agent synthesizes. |
+Use Claude Code subagents proportionally:
 
-If a bucket's real work is happening on main Opus when the table says it should be on a Sonnet agent, **dispatch the agent** — don't re-derive it on Opus.
+- Trivia: never.
+- Light Ops: usually direct; optionally one cheap read-only reviewer/validator.
+- Script: one read-only reviewer for non-trivial hooks/cron/local services.
+- Research: 2-3 independent researchers when scope permits.
+- App Code: use implementer/reviewer subagents only for independent modules.
+- Debug: use an independent investigator for unclear root cause.
+- Heavy Ops: use read-only discovery/risk/validation reviewers; keep destructive
+  applies and final decisions in main.
+- Repo-maintenance: split independent areas (CI, deps, docs, tests) when useful.
+- Ambiguous: clarify first.
 
-## Procedure
+Parent must verify subagent claims before reporting success.
 
-1. Read the user's message end-to-end, including any pasted stack traces, file paths, or ticket references.
-2. Pick the bucket. If none fits cleanly, pick **Ambiguous** and ask.
-3. State the classification in one short sentence ("Treating this as Light Ops — edit, lint, commit, offer MR. No dry-run needed since it's not touching prod."). Skip the explicit statement for **Trivia** — just do it.
-4. Apply the weight. Invoke the skills named in the bucket row, in order.
+## Obsidian / knowledge
 
-## Escalation — Light Ops → Heavy Ops (and similar promotions)
+For Ops/Infra, Debug, architecture choices, and reusable research, use Workflow
+MCP `start_task`/`discover_context` or Obsidian MCP search before making
+knowledge-base claims. Candidate paths or hook reminders are routing metadata,
+not evidence; cite only notes actually read.
 
-A light fix can turn out to be a hard task. If during Light Ops you notice **any** of:
+End-of-task note rule:
 
-- The same pattern exists in 2+ repos (unification opportunity).
-- The fix patches around a deeper design issue (symptom vs cause).
-- The change would break an implicit contract (role interface, module boundary, CI assumption).
-- The user's follow-up reveals wider scope than stated.
-- The diff is growing beyond ~50 lines or spreading to multiple files.
+- Heavy Ops and Debug with a shipped fix or concrete findings: write a raw note
+  unless duplicate or trivial.
+- Other non-trivia: ask "Take a note for this?" with a one-line summary and
+  target path.
 
-**Pause.** Announce: "This is looking like Heavy Ops because <specific reason>. I suggest we switch to the deep-dive flow: brainstorm → Obsidian check → plan → implement → dry-run → arch-review → apply. OK to proceed with the full pipeline, or do you want to stay on the light path and file the deeper concern separately?" Wait for the user's call.
+## Finish
 
-Similar promotion rules apply: **Debug → Heavy Ops** (bug turns out to be design problem), **Trivia → Light Ops** (one-line change turns out to touch prod), **Light Ops → Research** (the user actually wants to understand first, not fix).
+Before final response:
 
-## Insights — woven into every non-trivia bucket
-
-The user values insights over pure execution. At each natural step boundary (after classification, after Obsidian check, after implementation, before dry-run, at end of task), surface any of:
-
-- **Better approach** you noticed while reading the code ("This role uses a loop-with-when pattern; native Ansible `when + with_items` would be simpler here.").
-- **Best-practice drift** ("The Terraform module uses `count` where `for_each` would be safer against reorderings.").
-- **Simplification** ("Three of these conditionals collapse to one.").
-- **Cross-repo unification** ("This NGINX config pattern also lives in `infra-edge/` — worth promoting to `Knowledge/nginx-tls-offload.md`?").
-
-Format: one short paragraph per insight. What matters is clarity. Do **not** implement insights silently — propose, wait for direction. Do not list insights the user would already know; only what would genuinely inform their decision.
-
-## Subagent fan-out — read, don't write (Heavy Ops and App code)
-
-**Rule:** fan out any step that *reads without writing*, join in main. Sequential, feedback-heavy, user-interactive, and destructive steps stay in the main agent.
-
-**Fan out** (parallel subagents, one message with multiple `Agent` tool calls):
-- **Obsidian consult** — dispatch `obsidian-consult` (Haiku), one subagent per vault path to search (`Projects/<current-repo>/`, `Knowledge/<topic>*`).
-- **Library / docs lookup** — dispatch `docs-lookup` (Haiku) for `mcp__context7` and `mcp__fetch` queries: unfamiliar libraries, CVEs, upstream release notes.
-- **Inventory / reference scan** — dispatch `inventory-scan` (Haiku): "find all call sites of X", "list every role that implements pattern Y", "grep for deprecated flag Z across the repo".
-- **Per-file lint / validate when files are independent** — e.g., `ansible-lint` on 5 unrelated roles, `terraform validate` in 3 separate modules. A bash hook or parallel `Bash` calls is cheaper than an agent here.
-- **Architecture review** — already dispatches a subagent by the skill's own design (Opus); this rule just makes it explicit.
-- **Independent implementation slices** (app-code TDD) — dispatch `implementation-leaf` (Sonnet) per slice when leaves are truly independent; see `superpowers:subagent-driven-development`.
-
-**Stay in main agent** (do not fan out):
-- **Brainstorm, plan writing** — user feedback loop; insights emerge from the whole picture.
-- **Implementation (edits)** — needs surgical continuity, lives in `surgical-changes` discipline.
-- **Mandatory dry-run gate** — blocking, requires user OK.
-- **Apply / commit / MR** — sequential, destructive, user-facing.
-- **update-project-docs synthesis** — integrates across all the diffs.
-- **Obsidian note write** — requires the user "take a note?" answer first.
-
-**Join pattern:** each subagent returns a short structured report (≤200 words, explicit "found / not found", citation paths). Main agent integrates reports before the next sequential step. If two subagent reports conflict, main agent decides — don't delegate the tie-break.
-
-**Skills to invoke for the pattern:** `superpowers:dispatching-parallel-agents` (for the one-message-multiple-`Agent`-calls pattern), `superpowers:subagent-driven-development` (when a plan has multiple independent implementation leaves that can run in parallel sessions).
-
-**Anti-patterns**:
-- Fanning out sequential work "just because you can" — three subagents for a top-down feature implementation creates integration debt worse than the latency you saved.
-- Fanning out work that needs user feedback — the subagent can't ask the user mid-flight.
-- Spawning a subagent for a one-line grep — orchestration overhead exceeds the work.
-- Forgetting to join — if two subagents return conflicting findings, the main agent must reconcile before proceeding.
-
-## Cross-cutting (all buckets except Trivia and pure Research)
-
-- After meaningful code/config change, invoke `update-project-docs`.
-- Always-on meta-principles: `think-before-coding`, `simplicity-first`, `surgical-changes`, `goal-driven-execution`. These skills fire on their own when applicable; don't duplicate their checks here.
-- Plans, debug findings, Knowledge entries → Obsidian (`mcp__obsidian__*` tools), not in-repo.
-- Dry-run gate for Heavy Ops is blocking. Never apply without user OK.
-
-## Anti-patterns
-
-- Classifying silently when the bucket is non-trivia — the classification must be visible.
-- Applying full app-code weight to a 20-line script because it's Python.
-- Applying Trivia weight to something that touches production config.
-- Skipping the "Ambiguous → ask" step and guessing.
-- Running Light Ops pipeline past the diff-size/scope red flags without pausing to offer promotion.
-- Surfacing insights as polite nothings ("this looks fine"). Say something concrete or nothing.
+- Review git status/diff for unintended edits when in a repo.
+- State exact verification commands/results, or exact blocker.
+- Update affected docs when workflow, commands, architecture, or conventions
+  changed; otherwise say none were affected.
+- Run Workflow MCP `finish_checklist` when available for non-trivia work.

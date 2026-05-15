@@ -1,64 +1,19 @@
 {
   "mcpServers": {
-    "sequentialthinking": {
-      "command": "docker",
-      "args": [
-        "run",
-        "--rm",
-        "-i",
-        "mcp/sequentialthinking"
-      ]
-    },
-    "context7": {
-      "command": "docker",
-      "args": [
-        "run",
-        "--rm",
-        "-i",
-        "-e",
-        "CONTEXT7_API_KEY",
-        "-e",
-        "MCP_TRANSPORT=stdio",
-        "mcp/context7"
-      ]
-    },
-    "gitlab": {
-      "command": "docker",
-      "args": [
-        "run",
-        "--rm",
-        "-i",
-        "-e",
-        "GITLAB_PERSONAL_ACCESS_TOKEN",
-        "-e",
-        "GITLAB_API_URL",
-        "zereight050/gitlab-mcp"
-      ]
-    },
-    "obsidian": {
-      "command": "docker",
-      "args": [
-        "run",
-        "--rm",
-        "-i",
-        "-e",
-        "OBSIDIAN_HOST",
-        "-e",
-        "OBSIDIAN_API_KEY",
-        "mcp/obsidian"
-      ],
-      "env": {
-        "OBSIDIAN_HOST": "host.docker.internal"
+    "docker_gateway": {
+      "type": "http",
+      "url": "http://127.0.0.1:8811/mcp",
+      "headers": {
+        "Authorization": "Bearer ${MCP_GATEWAY_AUTH_TOKEN}"
       }
     },
-    "fetch": {
-      "command": "docker",
-      "args": [
-        "run",
-        "--rm",
-        "-i",
-        "mcp/fetch"
-      ]
+    "gitlab": {
+      "type": "http",
+      "url": "http://127.0.0.1:8812/mcp"
+    },
+    "workflow": {
+      "type": "http",
+      "url": "http://127.0.0.1:8813/mcp"
     }
   }
 }

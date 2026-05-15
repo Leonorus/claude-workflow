@@ -1,123 +1,192 @@
-# Claude — user preferences
+# Claude Code — user-wide agent guidance
+
+This file provides user-wide instructions for Claude Code across every project
+under `/Users/filipp.vysokov`. It mirrors the current Codex/Hermes workflow while
+using Claude Code's tool and MCP names.
 
 ## Priority order
+
 1. Explicit user instructions in the current message
-2. Project `AGENTS.md` (if present in the repo)
+2. Project `AGENTS.md` in the current repo (if present)
 3. This file
 4. Skills and plugins
 
 ---
 
 ## First move on any task
-Invoke the `classify-task` skill. Its verdict determines the bucket, workflow, and skills to run. The skill is the single source of truth for the taxonomy — don't re-describe it here.
 
-**Cross-cutting (applies to every non-trivia bucket):**
-- **After implementation:** invoke `update-project-docs` to update `AGENTS.md` and affected in-repo docs.
-- **At end of task:**
-  - **Heavy Ops and Debug** (when a fix shipped, or investigation produced concrete findings): auto-write the raw note to `Projects/<repo>/YYYY-MM-DD-<slug>.md` — no "Take a note?" ask. Raw capture is cheap; the synthesis layer benefits from a steady source signal.
-  - **All other non-trivia buckets:** ask "Take a note for this?" with a one-line summary + `Projects/<repo>/YYYY-MM-DD-<slug>.md` target. On yes, auto-write.
-  - **Then, regardless of bucket:** if the raw note contains a genuinely reusable pattern, propose promotion to `Knowledge/<topic>.md` (abstract, portable) and/or `Organization/<topic>.md` (org-specific, local). Promotions from `Projects/` stay gated — synthesis writes earn their keep. (Clippings/ are auto-ingested without an approval step — see Path B below.) See the ingest workflow below.
-  - Skip the raw-note write only if the task is a duplicate of an existing note or genuinely trivial.
+Workflow: for substantial software/ops/debug/research/repo-maintenance, call the
+Workflow MCP `start_task(prompt,cwd,repo)` tool first (Claude tool name is
+normally `mcp__workflow__start_task`); state/override bucket, load returned
+skills, follow contract/context/delegation/finish checklist. Use Workflow and/or
+Obsidian MCP before Obsidian claims. Finish non-trivia with Workflow MCP
+`finish_checklist` (normally `mcp__workflow__finish_checklist`). Fallback:
+invoke the `classify-task` skill.
 
-**Consult Obsidian for Ops/Infra and Debug.** SessionStart injects a vault index. Before proposing an approach, search `Projects/<current-repo>/`, `Knowledge/`, and `Organization/` — the same problem may be solved in another repo, or be documented as a general pattern or an org-specific decision. Use direct keyword overlap (component names, hostnames, error strings); never cite tangentially-related notes. Confirm with `mcp__obsidian__obsidian_simple_search`, read with `mcp__obsidian__obsidian_get_file_contents`.
+## Four principles
 
----
+- Think before coding — surface assumptions, name unknowns, and state tradeoffs.
+- Simplicity first — implement the minimum needed; avoid speculative flags,
+  abstractions, or helpers.
+- Surgical changes — touch only what was asked plus direct wiring/tests; report
+  unrelated issues rather than fixing them inline.
+- Goal-driven — define verifiable success criteria and execute until they pass
+  before claiming done.
 
-## Four principles (always on)
-- **Think before coding** — surface assumptions, don't hide confusion, name tradeoffs.
-- **Simplicity first** — minimum code that solves the problem. Nothing speculative, no premature abstractions.
-- **Surgical changes** — touch only what was asked. No unrelated refactors, no "while I'm here" cleanup.
-- **Goal-driven** — define success criteria up front, verify before claiming done.
+## Skills and plugins
 
-## Skills — toolbox, not governance
-Governance = this file + custom skills (`classify-task`, the four principles, `architecture-review`, `update-project-docs`). Plugins (`superpowers:*`, `engram:*`, `remember:*`, `claude-md-management:*`) are a **toolbox** — invoke when a specific tool fits, not as mandatory always-on gates. If a plugin skill's "ALWAYS ACTIVE" protocol contradicts `classify-task` or the four principles, `classify-task` wins.
+Skills and plugins are a toolbox, not mandatory governance. Workflow MCP routes
+substantial work into the right bucket and returns the contract/context/
+delegation/checklist; `classify-task` is the fallback human-readable workflow
+when Workflow MCP is unavailable or obviously wrong.
 
-`superpowers:brainstorming` / `writing-plans` / `test-driven-development` / `systematic-debugging` / `verification-before-completion` / `requesting-code-review` / `receiving-code-review` / `finishing-a-development-branch` are good tools. They fire when `classify-task` routes into a bucket that calls for them, not on every turn.
-
-### Do not use
-- `superpowers:using-git-worktrees` — user does not use worktrees. Never invoke it, even if another skill suggests it. Work directly in the current checkout.
-- Any mandatory task-tracker skill (beads, template-bridge:unified-workflow) — these plugins are removed. Do not hallucinate their commands.
-
----
+- Use returned skills from Workflow MCP instead of preloading broad workflow
+  prose.
+- Use Claude Code subagents only when they materially improve correctness or
+  parallelism; keep destructive/user-facing actions in the main agent.
+- Do not use git worktrees unless the user explicitly asks. Work directly in the
+  current checkout.
+- Do not invent tools — if a skill, plugin, or CLI is not documented here or in
+  an available skill, ask or research it before invoking.
+- Plugin skills (`superpowers:*`, `remember:*`, `claude-md-management:*`, etc.)
+  are reusable tools. If a plugin's always-on protocol conflicts with this file,
+  this file wins.
 
 ## Vault: five-layer knowledge model
-Vault at `~/Obsidian/Work/`. Five layers, inspired by [karpathy's LLM Wiki pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f):
 
-**Raw sources (inputs — feed the synthesis layers):**
-- **`Clippings/`** — external raw sources: web articles (via Obsidian Web Clipper), papers, vendor docs, RFCs, post-mortems. **Immutable**: the LLM reads from `Clippings/` but never writes, edits, renames, or deletes there. This is the source of truth for external material.
-- **`Projects/<repo>/YYYY-MM-DD-<slug>.md`** — internal working notes per repo. Plans (`tags: [plan, <repo>]`, `status: draft|active|done`) and debug findings (`YYYY-MM-DD-debug-<slug>.md`, tags `[debug, <repo>]`). Editable while active; treated as sources once the task is done.
+Vault root: `~/Obsidian/Work/`.
 
-**Synthesis (compiled knowledge — LLM-maintained):**
-- **`Knowledge/<topic>.md`** — abstract, reusable patterns (architectures, practices, debug recipes, tool notes). **Its own private git repo** at `Knowledge/.git/` (remote: `git@github.com:Leonorus/knowledge.git`, branch `main`), portable across jobs. **Kept abstract on purpose** so it stays useful at the next job — employer-specific detail (concrete architecture, service graph, team conventions, internal hostnames, ticket IDs, employee names, org codenames) belongs in `Organization/` instead. Frontmatter: `tags: [knowledge, <topic>]`, `last_verified: YYYY-MM-DD` (updated when the page is re-checked against current reality).
-- **`Organization/<topic>.md`** — org-specific knowledge (architecture, service graph, conventions, runbooks). Local-only, not versioned. Frontmatter: `tags: [organization, <topic>]`, `last_verified: YYYY-MM-DD`. Links down to `Clippings/` and `Projects/` sources, up to `Knowledge/` patterns.
+Raw source layers:
 
-**Scratch:**
-- **`Daily/YYYY-MM-DD.md`** — daily notes. Lint and metrics reports go to `Daily/Lint/` (see lint pass below).
+- `Clippings/` — immutable external sources. Read and link; never edit, rename,
+  or delete.
+- `Projects/<repo>/YYYY-MM-DD-<slug>.md` — raw per-repo plans, debug notes, and
+  findings. Editable while active; treated as source material after completion.
 
-Each synthesis layer (`Knowledge/`, `Organization/`) owns two special files:
-- `index.md` — content catalog grouped by category, one line per page. Update on every ingest.
-- `log.md` — append-only `## [YYYY-MM-DD] <op> | <title>` entries (ingest, query, lint).
+Synthesis layers:
 
-Prefer `mcp__obsidian__*` tools (`obsidian_append_content`, `obsidian_patch_content`, `obsidian_simple_search`) over raw Write/Read inside the vault. If Obsidian app isn't running, fall back to filesystem and tell the user — the vault is just markdown on disk.
+- `Knowledge/<topic>.md` — abstract, reusable patterns portable across
+  employers. Keep employer-specific details out.
+- `Organization/<topic>.md` — org-specific architecture, service graph,
+  conventions, and runbooks. Local-only, not versioned.
 
-Never commit vault paths to an unrelated repo. `Knowledge/` has its own private remote (portable across jobs); `Organization/` stays local.
+Scratch layer:
 
-### Ingest workflows
-Two ingest paths — same output shape (updates to synthesis layers + index + log entry), different triggers.
+- `Daily/YYYY-MM-DD.md` — daily scratch and reports. Lint reports go under
+  `Daily/Lint/`.
 
-**A. Push from `Projects/` (end-of-task).** After the "Take a note?" step, propose promotions up to the synthesis layers — only when there's a genuinely reusable pattern. Skip silently for one-off details.
+Each synthesis layer owns:
 
-> Propagation candidates from `Projects/<repo>/<note>.md`:
-> - **Knowledge**: `<topic>.md` (new / update §X) — one-line rationale
-> - **Organization**: `<topic>.md` (new / update §X) — one-line rationale
->
-> Promote, skip, or edit?
+- `index.md` — content catalog grouped by category.
+- `log.md` — append-only `## [YYYY-MM-DD] <op> | <title>` entries.
 
-**B. Auto-ingest from `Clippings/` (launchd-watched).** The act of adding a file to `Clippings/` is the approval — a `com.filipp.clippings-watcher` launchd agent with `WatchPaths` fires on add/modify, runs `~/.claude/scheduled-tasks/clippings-watcher/run.sh`, and that invokes a headless `claude -p` whose `SKILL.md` is authoritative. The LLM classifies each clipping as `Knowledge/`, `Organization/`, or skip (with a short reason logged to `Daily/<today>.md`) and writes directly — no human-approval step. Gating is enforced inside the SKILL.md refusal rules (abstract-pattern test for `Knowledge/`, update-over-create, immutability of clippings). If you ever need to ingest on-demand, dropping the file into `Clippings/` triggers the same flow; never modify the clipping itself — link to it from the synthesis pages instead. This carve-out applies only to `Clippings/`; promotions from `Projects/` remain gated via Path A.
+Promotion rules:
 
-**Rules that apply to both paths:**
-- A single source may touch multiple pages in each layer. On promote: update the target page(s), update the target layer's `index.md`, append a source-linked entry to its `log.md`.
-- **Abstract-pattern test before writing to `Knowledge/`**: a page earns a spot in `Knowledge/` only if it could plausibly apply to 5+ different employers. If it describes *this* employer's architecture, service graph, or team conventions, divert to `Organization/`. Proper nouns (internal hostnames and URLs, ticket IDs, employee names, org codenames) are the first tell that a page has drifted out of the abstract layer; either rephrase generically or divert.
-- Every synthesis page that cites a source must use a relative link (e.g. `[[Clippings/foo.md]]` or `[[Projects/<repo>/2026-04-18-debug-x.md]]`), so Obsidian's graph view shows the source trail.
+- Apply the abstract-pattern test before writing to `Knowledge/`: the page
+  should plausibly apply at 5+ different employers.
+- Put internal hostnames, ticket IDs, employee names, org codenames, concrete
+  service graphs, and company-specific runbooks in `Organization/`.
+- Use relative Obsidian links to sources such as `[[Clippings/foo.md]]` or
+  `[[Projects/<repo>/2026-04-18-debug-x.md]]`.
+- Never commit vault paths to unrelated repos.
 
-### Lint pass (user-triggered + weekly cron)
-On request (`lint knowledge` / `lint organization`), or automatically Mondays 10:00 local via the `com.filipp.weekly-knowledge-lint` launchd agent, scan the synthesis layers for: contradictions between pages, stale claims newer sources have superseded, **pages whose `last_verified` is older than 12 months**, orphan pages (no inbound links), missing cross-references between related pages, concepts frequently mentioned but lacking their own page. Also flag **un-ingested clippings** — files in `Clippings/` not referenced by any page in `Knowledge/` or `Organization/`. Report lint findings to `Daily/Lint/<today>.md` and deterministic metrics (layer counts, promotion ratio, mean-age, stale-page count) to `Daily/Lint/<today>-metrics.md`; act only on approval; log the pass in each synthesis layer's `log.md`.
-
-### Cross-project library behavior
-Obsidian is a shared library across all work, not a per-repo scratchpad. Architecturally linked projects may solve the same problem differently — use the synthesis layers to unify designs. Prefer linking existing pages over duplicating content. Raise repeating patterns and cross-repo design smells as proposals; don't execute in silence.
-
----
+Obsidian hooks are trigger-only. Do not infer or cite note candidates from hook
+text. For Ops/Infra/Debug/architecture/reusable research, use Workflow MCP
+`start_task`/`discover_context` or Obsidian MCP search, then read matching notes
+before making claims.
 
 ## Git conventions
-- Branch name = Jira ticket (`DEVOPS-1488`, `PROJ-42`). Ask if ticket not provided.
-- Commit = `TICKET_NUMBER short message`. Example: `DEVOPS-1488 add nginx reverse proxy`.
-- Always gitignore `.claude/` in any project.
+
+### Branches
+
+- Branch names follow Jira ticket numbers: `DEVOPS-1488`, `PROJ-42`, etc.
+- Ask for the Jira ticket number before creating branches or commits if it was
+  not provided.
+
+### Commits
+
+- Format: `TICKET_NUMBER short_message_what_was_done`.
+- Example: `DEVOPS-1488 add nginx reverse proxy configuration`.
+- The ticket number must match the current branch name.
+- Do not create commits without a Jira ticket unless the user explicitly asks to
+  bypass this convention.
+- Exception: personal config repositories such as `~/.claude` and
+  `~/src/hermes-config` do not require Jira ticket prefixes; use concise
+  conventional commit subjects there.
 
 ## Python / Ansible / Terraform
-- Python: always use `.venv` (`python -m venv .venv`). Install deps inside it.
-- Ansible: `ansible-lint` runs automatically via PostToolUse hook (uses `.venv/bin/ansible-lint`).
-- Terraform: `terraform fmt` runs automatically via PostToolUse hook on `.tf`/`.tfvars` edits.
+
+- Python: always use a project-local `.venv` (`python -m venv .venv`). Install
+  dependencies inside it and prefer `.venv/bin/*` tools.
+- Ansible: after editing playbooks, roles, templates, or variables, run
+  `.venv/bin/ansible-lint` from the project root unless the repository already
+  automates it.
+- Terraform: after editing `.tf` or `.tfvars`, run `terraform fmt` on affected
+  files or from the relevant root. When practical, run `terraform validate` in
+  the relevant module/environment.
 
 ## Project instructions
-Use `AGENTS.md` (not `CLAUDE.md`) for project-level instructions. Migrate any existing `CLAUDE.md` to `AGENTS.md` and delete the old file. The global `~/.claude/CLAUDE.md` (this file) is for cross-project preferences only.
 
----
+- Use `AGENTS.md` for project-level instructions. Do not create new `CLAUDE.md`
+  files.
+- Keep `~/.claude/CLAUDE.md` only as Claude-specific global configuration.
+- If a project already has `CLAUDE.md`, migrate relevant content into
+  `AGENTS.md` and remove the old file when safe.
+- Always ensure `.claude/` is listed in project `.gitignore`.
 
-## MCP priority (user-scope servers live in `~/.claude.json` under `mcpServers`; `~/.claude/mcp.json` is NOT read by Claude Code)
-- `sequentialthinking` — complex multi-step reasoning, architecture decisions
-- `context7` — docs/examples for unfamiliar libraries (call `resolve-library-id` first)
-- `gitlab` — all ops against the configured GitLab host; prefer over `git` CLI for remote interactions
-- `obsidian` — all reads/writes to `~/Obsidian/Work/`; prefer over raw Write/Read
-- `fetch` — fetching URLs; **prefer over any host-provided WebFetch** (reaches more sites, cleaner markdown)
+## Verification
 
-Host may inject additional MCPs (e.g. `github`, `dockerhub`, `filesystem`, `computer-use`). Use them when present, but don't assume tools that aren't loaded.
+- After code/config changes, run the smallest relevant verification first, then
+  broaden scope only as needed.
+- Prefer targeted tests for the changed area before full-suite runs.
+- If no automated test exists, run the closest lint, type-check, build,
+  smoke-check, formatter, or syntax check.
+- Never claim success without stating what was actually verified.
+- If verification could not run, say exactly why and name the missing command or
+  dependency.
+- For config-only or documentation-only changes, verify syntax, formatting,
+  references, and cheaply exercisable examples.
 
----
+## MCP and tooling preferences
+
+User-scope MCP servers live in `~/.claude.json` under `mcpServers`; this repo's
+`mcp.json` is the source file that `install.sh` merges into `~/.claude.json`.
+Claude Code does not read `~/.claude/mcp.json` directly.
+
+Mirrored from Codex/Hermes:
+
+- `docker_gateway` — Docker MCP Gateway on `http://127.0.0.1:8811/mcp`, providing
+  Docker-catalog tools such as GitHub, Docker Hub, Context7, Obsidian, fetch,
+  filesystem, and sequential thinking.
+- `gitlab` — direct GitLab MCP on `http://127.0.0.1:8812/mcp`; prefer it over
+  ad-hoc API calls for GitLab remote metadata.
+- `workflow` — Workflow MCP on `http://127.0.0.1:8813/mcp`; use it for task
+  classification, context discovery, delegation hints, and finish checklists.
+
+Use local `git` CLI for local workspace status, diffs, branches, staging,
+rebases, and commits. Use MCP tools for remote metadata when available.
 
 ## Security
-- Never commit secrets. `OBSIDIAN_API_KEY` lives in shell env (`~/.zshrc`), not in `~/.claude.json`.
-- Refuse destructive ops (`git reset --hard`, force push, `rm -rf` on unknown state) without explicit user confirmation.
-- **GitLab CI/CD variable tools are denied at the permission layer** (`mcp__gitlab__*variable*` in `settings.json` → `permissions.deny`). They typically contain secrets; use the GitLab UI if you need to inspect them.
-- **GitLab writes are denied by default** (`create_*`, `update_*`, `delete_*`, `merge_*`, `approve_*`, `push_*`, etc. in `settings.json` → `permissions.deny`). Remote mutations go through shell `git` / `glab` with explicit user approval, not through the MCP.
+
+- Never commit secrets.
+- Refuse destructive operations such as `git reset --hard`, force push, or
+  `rm -rf` on unknown state without explicit user confirmation.
+- Treat GitLab CI/CD variables as secrets; do not inspect them through MCP/API
+  tools.
+- GitLab MCP writes are denied in `settings.json`; remote mutations should go
+  through explicit user-approved commands, not silent MCP writes.
+
+## Working style
+
+- Be pragmatic and direct.
+- Preserve existing user changes. Do not revert unrelated work.
+- Prefer non-interactive commands and explicit verification.
+- When asked for review, default to finding bugs, regressions, risks, and
+  missing tests first. Put findings before summaries.
+- For implementation tasks, inspect existing project conventions before
+  introducing new patterns.
+- Prefer small, targeted changes over broad refactors unless explicitly
+  requested.
+- State assumptions when they materially affect the solution.
 
 @RTK.md

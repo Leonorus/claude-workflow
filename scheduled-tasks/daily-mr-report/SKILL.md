@@ -46,7 +46,7 @@ Store each result as `summary` keyed by MR `web_url`.
 
 ## Step 3 — render and append
 
-Use `mcp__obsidian__obsidian_append_content` to append to
+Use `mcp__docker_gateway__obsidian_append_content` to append to
 `Daily/{TODAY}.md` (vault path is the configured Obsidian vault root).
 
 Append exactly this template — no extra prose, no context blocks, no last-7-days

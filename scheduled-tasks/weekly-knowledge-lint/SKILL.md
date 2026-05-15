@@ -14,7 +14,7 @@ You are running headless on a weekly schedule. Do not ask questions. Use only Ob
 ## Step 1 — inventory each layer
 
 For each layer in `LAYERS`:
-- List files via `mcp__obsidian__obsidian_list_files_in_dir` with `dirpath=<layer>/`
+- List files via `mcp__docker_gateway__obsidian_list_files_in_dir` with `dirpath=<layer>/`
 - Read `<layer>/index.md` and `<layer>/log.md`
 - Read every content page (`*.md` other than `index.md`, `log.md`, `README.md`)
 
@@ -44,7 +44,7 @@ For each layer, identify:
 
 ## Step 3 — emit report
 
-Append to `Daily/Lint/{TODAY}.md` via `mcp__obsidian__obsidian_append_content` using this exact template. If a section has no items, write `_None_` on its own line — do NOT omit the heading.
+Append to `Daily/Lint/{TODAY}.md` via `mcp__docker_gateway__obsidian_append_content` using this exact template. If a section has no items, write `_None_` on its own line — do NOT omit the heading.
 
 ```
 ## Knowledge Lint — {TODAY}
@@ -87,7 +87,7 @@ Append to `Daily/Lint/{TODAY}.md` via `mcp__obsidian__obsidian_append_content` u
 
 ## Step 4 — log entries
 
-Append one line to each layer's `log.md` via `mcp__obsidian__obsidian_append_content`:
+Append one line to each layer's `log.md` via `mcp__docker_gateway__obsidian_append_content`:
 
 ```
 ## [{TODAY}] lint | {total_findings} findings ({N_drift} drift, {N_stale} stale, {N_orphans} orph, {N_contradictions} contra, {N_xref} xref, {N_ghost} ghost)

@@ -14,36 +14,26 @@
       "Bash(crontab -l)",
       "Bash(log show *)",
       "Skill(update-config)",
-      "mcp__github",
-      "mcp__obsidian",
-      "mcp__fetch",
-      "mcp__context7",
-      "mcp__sequentialthinking",
       "mcp__gitlab",
-      "mcp__dockerhub__check*",
-      "mcp__dockerhub__get*",
-      "mcp__dockerhub__list*",
-      "mcp__dockerhub__search",
-      "mcp__dockerhub__dockerHardenedImages",
-      "mcp__filesystem__read_*",
-      "mcp__filesystem__list_*",
-      "mcp__filesystem__search_*",
-      "mcp__filesystem__get_*",
-      "mcp__filesystem__directory_tree",
-      "mcp__plugin_engram_engram__mem_save",
-      "mcp__plugin_engram_engram__mem_search",
-      "mcp__plugin_engram_engram__mem_context",
-      "mcp__plugin_engram_engram__mem_session_summary",
-      "mcp__plugin_engram_engram__mem_get_observation",
-      "mcp__plugin_engram_engram__mem_save_prompt",
-      "mcp__plugin_engram_engram__mem_update",
-      "mcp__plugin_engram_engram__mem_suggest_topic_key",
-      "mcp__plugin_engram_engram__mem_session_start",
-      "mcp__plugin_engram_engram__mem_session_end",
-      "mcp__plugin_engram_engram__mem_stats",
-      "mcp__plugin_engram_engram__mem_delete",
-      "mcp__plugin_engram_engram__mem_timeline",
-      "mcp__plugin_engram_engram__mem_capture_passive"
+      "mcp__workflow",
+      "mcp__docker_gateway__fetch",
+      "mcp__docker_gateway__resolve_library_id",
+      "mcp__docker_gateway__get_library_docs",
+      "mcp__docker_gateway__resolve-library-id",
+      "mcp__docker_gateway__get-library-docs",
+      "mcp__docker_gateway__search*",
+      "mcp__docker_gateway__list*",
+      "mcp__docker_gateway__get*",
+      "mcp__docker_gateway__check*",
+      "mcp__docker_gateway__read*",
+      "mcp__docker_gateway__directory_tree",
+      "mcp__docker_gateway__issue_read",
+      "mcp__docker_gateway__pull_request_read",
+      "mcp__docker_gateway__dockerHardenedImages",
+      "mcp__docker_gateway__obsidian_get*",
+      "mcp__docker_gateway__obsidian_list*",
+      "mcp__docker_gateway__obsidian_simple_search",
+      "mcp__docker_gateway__obsidian_complex_search"
     ],
     "deny": [
       "mcp__gitlab__approve_*",
@@ -63,7 +53,29 @@
       "mcp__gitlab__retry_*",
       "mcp__gitlab__update_*",
       "mcp__gitlab__upload_*",
-      "mcp__gitlab__*variable*"
+      "mcp__gitlab__*variable*",
+      "mcp__docker_gateway__createRepository",
+      "mcp__docker_gateway__updateRepositoryInfo",
+      "mcp__docker_gateway__delete_*",
+      "mcp__docker_gateway__create_*",
+      "mcp__docker_gateway__update_*",
+      "mcp__docker_gateway__fork_*",
+      "mcp__docker_gateway__merge_*",
+      "mcp__docker_gateway__push_*",
+      "mcp__docker_gateway__upload_*",
+      "mcp__docker_gateway__*variable*",
+      "mcp__docker_gateway__write_file",
+      "mcp__docker_gateway__edit_file",
+      "mcp__docker_gateway__move_file",
+      "mcp__docker_gateway__create_directory",
+      "mcp__docker_gateway__obsidian_append_content",
+      "mcp__docker_gateway__obsidian_patch_content",
+      "mcp__docker_gateway__obsidian_delete_file",
+      "mcp__docker_gateway__mcp_add",
+      "mcp__docker_gateway__mcp_remove",
+      "mcp__docker_gateway__mcp_config_set",
+      "mcp__docker_gateway__mcp_activate_profile",
+      "mcp__docker_gateway__mcp_create_profile"
     ]
   },
   "hooks": {
@@ -144,20 +156,13 @@
   "enabledPlugins": {
     "claude-md-management@claude-plugins-official": true,
     "remember@claude-plugins-official": true,
-    "superpowers@claude-plugins-official": true,
-    "engram@engram": true
+    "superpowers@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "claude-plugins-official": {
       "source": {
         "source": "github",
         "repo": "anthropics/claude-plugins-official"
-      }
-    },
-    "engram": {
-      "source": {
-        "source": "github",
-        "repo": "Gentleman-Programming/engram"
       }
     }
   },

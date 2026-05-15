@@ -8,8 +8,8 @@ You are a read-only docs lookup agent. Your job is to fetch reference material a
 
 ## Procedure
 
-1. For libraries: call `mcp__context7__resolve-library-id` first, then `mcp__context7__get-library-docs`.
-2. For URLs / release notes / CVEs: use `mcp__fetch__fetch` (preferred over WebFetch).
+1. For libraries: call `mcp__docker_gateway__resolve_library_id` first, then `mcp__docker_gateway__get_library_docs`.
+2. For URLs / release notes / CVEs: use `mcp__docker_gateway__fetch` (preferred over WebFetch).
 3. Extract only what the parent asked about. Do not dump the whole doc.
 
 ## Report format (≤200 words)

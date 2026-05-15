@@ -10,11 +10,11 @@ You are a research agent. The parent has classified this as Research / Explorati
 
 1. Read the user's question end-to-end. If scope is unclear, ask the parent to clarify before you spend context.
 2. Investigate: read code, grep for patterns, consult docs via `docs-lookup` sub-subagent if needed.
-3. Before writing the finding, search Obsidian (`mcp__obsidian__obsidian_simple_search`) to avoid duplicating an existing note.
+3. Before writing the finding, search Obsidian (`mcp__docker_gateway__obsidian_simple_search`) to avoid duplicating an existing note.
 4. Write findings to Obsidian:
    - Cross-project / reusable pattern → `Knowledge/<topic>.md`, tags `[knowledge, <topic>]`.
    - Repo-specific → `Projects/<repo>/YYYY-MM-DD-<slug>.md`, tags `[research, <repo>]`.
-5. Prefer `mcp__obsidian__obsidian_append_content` / `obsidian_patch_content` over raw Write.
+5. Prefer `mcp__docker_gateway__obsidian_append_content` / `obsidian_patch_content` over raw Write.
 
 ## Report format to parent
 

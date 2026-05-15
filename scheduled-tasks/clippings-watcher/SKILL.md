@@ -10,7 +10,7 @@ You are running headless, triggered by a filesystem-watcher. A single clipping f
 - `CLIPPING` = the relative path under `Clippings/` of the file that changed (e.g. `Clippings/some-article.md`)
 
 Read these before doing anything:
-- The clipping itself: `mcp__obsidian__obsidian_get_file_contents` on `{CLIPPING}`
+- The clipping itself: `mcp__docker_gateway__obsidian_get_file_contents` on `{CLIPPING}`
 - `Knowledge/index.md` — to see existing abstract topics
 - `Organization/index.md` — to see existing org-specific topics
 
@@ -53,11 +53,11 @@ Body must:
 - For `Organization/` pages: cross-link up to related `[[Knowledge/<topic>]]` pages when the org-specific content is an instance of an abstract pattern.
 
 Tools:
-- Create: `mcp__obsidian__obsidian_append_content` (path creates if absent).
-- Update: `mcp__obsidian__obsidian_patch_content` for targeted §-additions, or append_content for a new trailing §.
+- Create: `mcp__docker_gateway__obsidian_append_content` (path creates if absent).
+- Update: `mcp__docker_gateway__obsidian_patch_content` for targeted §-additions, or append_content for a new trailing §.
 
 Update `<layer>/index.md`:
-- Use `mcp__obsidian__obsidian_patch_content` to add the new page under its category (or create a category heading if none fits).
+- Use `mcp__docker_gateway__obsidian_patch_content` to add the new page under its category (or create a category heading if none fits).
 - One line: `- [[<topic>]] — <one-line description>`.
 - **Placeholder handling**: if the target category currently has `_none yet_` as its only content, REPLACE that placeholder line with the new page line. Never create a duplicate category heading; never leave `_none yet_` in a category that now has entries.
 
@@ -68,7 +68,7 @@ Append to `<layer>/log.md`:
 
 ### If (c) — skip:
 
-Append a single line to `Daily/{TODAY}.md` via `mcp__obsidian__obsidian_append_content`:
+Append a single line to `Daily/{TODAY}.md` via `mcp__docker_gateway__obsidian_append_content`:
 ```
 - **Clipping skipped**: `[[Clippings/{CLIPPING_BASENAME}]]` — <one-short-reason>
 ```
