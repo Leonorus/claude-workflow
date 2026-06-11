@@ -20,8 +20,9 @@ Workflow MCP `start_task(prompt,cwd,repo)` tool first (Claude tool name is
 normally `mcp__workflow__start_task`); state/override bucket, load returned
 skills, follow contract/context/delegation/finish checklist. Use Workflow and/or
 Obsidian MCP before Obsidian claims. Finish non-trivia with Workflow MCP
-`finish_checklist` (normally `mcp__workflow__finish_checklist`). Fallback:
-invoke the `classify-task` skill.
+`finish_checklist` (normally `mcp__workflow__finish_checklist`), passing the
+`task_id` from the start_task packet so start/finish bucket disagreement feeds
+classification learning. Fallback: invoke the `classify-task` skill.
 
 ## Four principles
 
