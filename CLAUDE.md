@@ -48,6 +48,8 @@ when Workflow MCP is unavailable or obviously wrong.
   current checkout.
 - Do not invent tools — if a skill, plugin, or CLI is not documented here or in
   an available skill, ask or research it before invoking.
+- Do not use or invent Beads, `bd`, `template-bridge`, or mandatory task-tracker
+  commands. Those tools are not available.
 - Plugin skills (`superpowers:*`, `remember:*`, `claude-md-management:*`, etc.)
   are reusable tools. If a plugin's always-on protocol conflicts with this file,
   this file wins.
@@ -105,9 +107,19 @@ before making claims.
 
 ### Commits
 
+- After completing work that changes files in a Git repository, commit the task
+  changes by default — after verification and diff review. Do not stop solely
+  because the user did not separately ask for a commit at the end.
+- Stage only files intentionally changed for the task; preserve unrelated user
+  changes.
+- Do not commit when: there is no Git repository, there are no task changes,
+  verification failed and the user has not approved committing anyway, secrets
+  may be present, or the user explicitly asked not to commit.
 - Format: `TICKET_NUMBER short_message_what_was_done`.
 - Example: `DEVOPS-1488 add nginx reverse proxy configuration`.
-- The ticket number must match the current branch name.
+- The ticket number must match the current branch name. If the branch has no
+  Jira ticket, use a concise conventional commit subject rather than leaving
+  verified work uncommitted.
 - Do not create commits without a Jira ticket unless the user explicitly asks to
   bypass this convention.
 - Exception: personal config repositories such as `~/.claude` and
@@ -163,6 +175,24 @@ Mirrored from Codex/Hermes:
 - `workflow` — Workflow MCP on `http://127.0.0.1:8813/mcp`; use it for task
   classification, context discovery, delegation hints, and finish checklists.
 
+Logical tool preferences (most are exposed through `docker_gateway`):
+
+- Sequential thinking (`mcp__docker_gateway__sequentialthinking`) — complex
+  multi-step reasoning, architecture decisions, and deep debugging.
+- Context7 (`resolve-library-id` then `get-library-docs`) — docs/examples for
+  unfamiliar libraries; resolve the library ID first.
+- `gitlab` — GitLab remote repos and MR/pipeline metadata; prefer over ad-hoc
+  API calls for GitLab tasks.
+- GitHub tools (`mcp__docker_gateway__*`) — GitHub-hosted repos, upstream
+  dependencies, public issues/PRs, and code search; prefer over ad-hoc
+  shell/API/web access when available.
+- Obsidian (`mcp__docker_gateway__obsidian_*`) — reads/searches of
+  `~/Obsidian/Work/`; prefer over raw file access when available.
+- Docker Hub (`mcp__docker_gateway__*`) — search images, verify repositories and
+  tags, and check hardened images before recommending or pulling.
+- `fetch` / `WebFetch` — raw web pages, documentation, or HTTP responses when
+  direct retrieval is needed.
+
 Use local `git` CLI for local workspace status, diffs, branches, staging,
 rebases, and commits. Use MCP tools for remote metadata when available.
 
@@ -175,6 +205,18 @@ rebases, and commits. Use MCP tools for remote metadata when available.
   tools.
 - GitLab MCP writes are denied in `settings.json`; remote mutations should go
   through explicit user-approved commands, not silent MCP writes.
+
+## Permission and approval requests
+
+- Prefer less restrictive but still scoped permissions when safe: suggest
+  reasonably scoped reusable allow rules for recurring command families (e.g.
+  `Bash(kubectl *)`) in `settings.json`/`settings.local.json` instead of one-off
+  exact-command approvals. The `update-config` and `fewer-permission-prompts`
+  skills manage these.
+- Do not request overly broad allow rules such as arbitrary shell or Python
+  execution.
+- Keep approvals narrow or explicit for destructive actions, secrets, force
+  pushes, resets, production changes, and other high-risk operations.
 
 ## Working style
 
