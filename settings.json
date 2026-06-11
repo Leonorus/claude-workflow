@@ -166,5 +166,6 @@
       }
     }
   },
-  "tui": "fullscreen"
+  "tui": "fullscreen",
+  "model": "claude-fable-5[1m]"
 }
