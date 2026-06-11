@@ -41,7 +41,15 @@ RBAC, network policy, Terraform/Ansible state, Helm values, or direct deploy.
 
 ## Subagents
 
-Use Claude Code subagents proportionally:
+Read-only delegation (review, repo investigation, debugging, research, risk
+review, validation planning) is free and pre-authorized — no separate
+confirmation unless a child may mutate state or touch restricted external
+systems. Before doing substantial work directly, either spawn useful independent
+agents or state why delegation would slow the task (single serial change, tiny
+diff, no independent workstream, destructive/interactive step, or context only
+the parent has).
+
+Per-bucket defaults:
 
 - Trivia: never.
 - Light Ops: usually direct; optionally one cheap read-only reviewer/validator.
@@ -54,7 +62,10 @@ Use Claude Code subagents proportionally:
 - Repo-maintenance: split independent areas (CI, deps, docs, tests) when useful.
 - Ambiguous: clarify first.
 
-Parent must verify subagent claims before reporting success.
+Extra tokens and independent passes are acceptable when they materially improve
+correctness, reasoning quality, or speed to a verified result; do not under-spec
+context just to save tokens. Parent must verify subagent claims before reporting
+success.
 
 ## Obsidian / knowledge
 
