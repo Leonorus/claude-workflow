@@ -92,6 +92,71 @@ Promotion rules:
   `[[Projects/<repo>/2026-04-18-debug-x.md]]`.
 - Never commit vault paths to unrelated repos.
 
+### Knowledge pipeline
+
+Treat each layer as a different durability and action surface:
+
+- Raw project notes are evidence — chronology, observations, plans, and
+  findings — not automatically reusable guidance.
+- Project registers track unresolved or repeated issues, decisions, and risks
+  that should survive across task sessions.
+- `Organization/` holds org-specific synthesis: service graphs, internal
+  conventions, runbooks, hostnames, and ticketed context.
+- `Knowledge/` holds abstract patterns that plausibly apply across 5+ employers.
+- `AGENTS.md` holds execution guardrails only: commands, safety rules,
+  conventions, and workflow constraints that should affect future agent
+  behavior.
+
+Weekly knowledge review may append safe `Knowledge/`, `Organization/`, and
+register updates, but must not edit any `AGENTS.md` or user-wide workflow
+guidance — it only suggests those guardrail changes. Repo `AGENTS.md` rewrites
+belong to the task-session finisher (see End-of-task classification below).
+
+### Project registers
+
+Use registers when a finding is durable but not broad enough for synthesis:
+
+- `Projects/<repo>/registers/problem-register.md` — unresolved or repeated
+  problems.
+- `Projects/<repo>/registers/decision-register.md` — durable repo-local
+  decisions.
+- `Projects/<repo>/registers/risk-register.md` — risks, mitigations, and review
+  points.
+
+Entries are append-only with stable identifiers (`PROB-YYYY-NNN`,
+`DEC-YYYY-NNN`, `RISK-YYYY-NNN`):
+
+```md
+## PROB-YYYY-NNN short title
+
+Status: Active | Mitigated | Fixed | Accepted | Deferred
+Sources:
+- [[Projects/<repo>/<note>]]
+Current workaround:
+Desired fix:
+Verification:
+Next action:
+Last reviewed: YYYY-MM-DD
+```
+
+### End-of-task classification
+
+For Heavy Ops and Debug finishers, classify any durable outcome before ending:
+
+- raw note when the concrete finding/fix is non-trivial and not duplicate;
+- register update for unresolved/repeated problems, durable repo-local
+  decisions, or risks;
+- `Knowledge/` or `Organization/` promotion when the evidence is mature enough
+  for synthesis;
+- repo `AGENTS.md` update when this session changed commands, architecture,
+  safety rules, or conventions and the current guidance is stale or missing —
+  rewrite it directly in the task session with normal diff review and
+  verification (the `update-project-docs` skill handles this);
+- `AGENTS.md` suggestion when the guardrail should be reviewed by a human or
+  applies outside the current repo;
+- no durable update when the work was trivial, duplicate, or too
+  stale/speculative.
+
 Obsidian hooks are trigger-only. Do not infer or cite note candidates from hook
 text. For Ops/Infra/Debug/architecture/reusable research, use Workflow MCP
 `start_task`/`discover_context` or Obsidian MCP search, then read matching notes
