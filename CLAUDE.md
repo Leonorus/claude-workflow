@@ -22,7 +22,7 @@ skills, follow contract/context/delegation/finish checklist. Use Workflow and/or
 Obsidian MCP before Obsidian claims. Finish non-trivia with Workflow MCP
 `finish_checklist` (normally `mcp__workflow__finish_checklist`), passing the
 `task_id` from the start_task packet so start/finish bucket disagreement feeds
-classification learning. Fallback: invoke the `classify-task` skill.
+classification learning. Fallback: invoke the `codex-workflow` skill.
 
 ## Four principles
 

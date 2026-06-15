@@ -142,7 +142,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh /Users/filipp.vysokov/.claude/hooks/classify-task-reminder.sh",
+            "command": "sh /Users/filipp.vysokov/.claude/hooks/workflow-reminder.sh",
             "timeout": 5
           }
         ]
