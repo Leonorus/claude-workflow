@@ -38,8 +38,9 @@ classification learning. Fallback: invoke the `codex-workflow` skill.
 
 Skills and plugins are a toolbox, not mandatory governance. Workflow MCP routes
 substantial work into the right bucket and returns the contract/context/
-delegation/checklist; `classify-task` is the fallback human-readable workflow
-when Workflow MCP is unavailable or obviously wrong.
+delegation/checklist; `codex-workflow` is the fallback human-readable workflow
+(source of truth for the bucket taxonomy and contracts) when Workflow MCP is
+unavailable or obviously wrong.
 
 - Use returned skills from Workflow MCP instead of preloading broad workflow
   prose.
