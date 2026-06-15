@@ -33,7 +33,9 @@
       "mcp__docker_gateway__obsidian_get*",
       "mcp__docker_gateway__obsidian_list*",
       "mcp__docker_gateway__obsidian_simple_search",
-      "mcp__docker_gateway__obsidian_complex_search"
+      "mcp__docker_gateway__obsidian_complex_search",
+      "mcp__docker_gateway__obsidian_append_content",
+      "mcp__docker_gateway__obsidian_patch_content"
     ],
     "deny": [
       "mcp__gitlab__approve_*",
@@ -68,8 +70,6 @@
       "mcp__docker_gateway__edit_file",
       "mcp__docker_gateway__move_file",
       "mcp__docker_gateway__create_directory",
-      "mcp__docker_gateway__obsidian_append_content",
-      "mcp__docker_gateway__obsidian_patch_content",
       "mcp__docker_gateway__obsidian_delete_file",
       "mcp__docker_gateway__mcp_add",
       "mcp__docker_gateway__mcp_remove",
@@ -96,32 +96,18 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh /Users/filipp.vysokov/.claude/auto-sync.sh",
-            "timeout": 30
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "f=$(jq -r '.tool_response.filePath // .tool_input.file_path'); echo \"$f\" | grep -qE '\\.(yml|yaml)$' && echo \"$f\" | grep -qE '(roles/|playbooks/|tasks/|handlers/|defaults/|vars/|group_vars/|host_vars/|playbook|ansible)' && [ -f .venv/bin/ansible-lint ] && .venv/bin/ansible-lint \"$f\" 2>/dev/null || true",
-            "timeout": 60,
-            "statusMessage": "Running ansible-lint..."
+            "command": "sh /Users/filipp.vysokov/.claude/hooks/enforce-finish.sh",
+            "timeout": 10
           }
         ]
       },
       {
-        "matcher": "Write|Edit",
+        "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "f=$(jq -r '.tool_response.filePath // .tool_input.file_path'); echo \"$f\" | grep -qE '\\.(tf|tfvars)$' && terraform fmt \"$f\" 2>/dev/null || true",
-            "timeout": 30,
-            "statusMessage": "Running terraform fmt..."
+            "command": "sh /Users/filipp.vysokov/.claude/auto-sync.sh",
+            "timeout": 30
           }
         ]
       }
@@ -155,7 +141,6 @@
   },
   "enabledPlugins": {
     "claude-md-management@claude-plugins-official": true,
-    "remember@claude-plugins-official": true,
     "superpowers@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
