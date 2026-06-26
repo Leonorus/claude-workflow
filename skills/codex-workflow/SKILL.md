@@ -32,6 +32,7 @@ For non-trivia work, state the bucket in one short sentence and run that flow:
 | Script | Single-file Go/Python glue, run-once or cron, no app test harness | Short plan if non-trivial -> implement minimal script -> smoke-test safe input -> docs if reusable. |
 | Debug | Bug report, failing test, stack trace, unexpected behavior | Reproduce -> hypothesize -> instrument/read -> fix the cause -> verify the exact failure is gone -> note findings if concrete. |
 | Research | "How does X work", compare options, repo exploration, no code change | Read and report. Use Obsidian when this is Ops/Infra, Debug, architecture, or reusable research. |
+| Planning | "Plan how we'd do X", lay out an approach/spec/roadmap before building; intent to build but no execution yet | Refine intent -> consult Obsidian/`codex-knowledge` -> propose 2-3 approaches -> author sequenced verifiable plan -> user approval -> write plan note. Default stop; promote to an execution bucket on explicit go-ahead. |
 | Repo-maintenance | Dependency bumps, CI cleanup, docs cleanup, tests, release metadata, repository hygiene, stale config, or convention maintenance | Inspect current convention -> split independent areas such as CI/deps/docs/tests/release -> use subagents where useful -> edit surgically -> run affected validation -> update docs/notes when conventions change. |
 | Ambiguous | Multiple buckets fit or scope is unclear | Ask a concise clarifying question before edits. |
 
@@ -50,6 +51,7 @@ Use these contracts after classification. They keep global agent instructions sh
 | Script | Define input/output/exit-code, idempotency, and side effects. | Inspect runtime/schedule conventions; keep implementation minimal. | One implementer or reviewer for non-trivial scripts; avoid competing edits to same file. | Syntax check plus safe smoke test; for cron/launchd, verify schedule, locking/state, and logs. |
 | Debug | Reproduce or observe the exact failure before fixing. | Consult Obsidian for prior incidents/patterns; use systematic debugging for unclear root cause. | Spawn an independent investigator when bug is unclear: repro/logs vs code-path/config. | Verify the exact failure is gone; note concrete root cause/fix unless duplicate/trivial. |
 | Research | State the question, decision needed, and evidence bar. | Use Obsidian for Ops/Infra, Debug, architecture, or reusable research; use upstream docs/source when relevant. | Use 2-3 researchers when scope permits: upstream, local, Obsidian/org alternatives. | Report facts, assumptions, recommendation, confidence, risks, and next checks; no code changes. |
+| Planning | State goal, assumptions, unknowns, and the success criteria that make a plan done; no steps yet. | Read repo plus directly-relevant Obsidian Projects/Knowledge/Organization notes before proposing. | Read-only explorers/researchers gather context and pressure-test approaches; parent owns the plan. | Plan self-review (no TBDs/contradictions, every step verifiable, single-plan scope) + user approval; write the plan note. Default stop; promote on go-ahead. |
 | Repo-maintenance | Check git status/diff and preserve unrelated user changes. | Inspect affected areas: CI, deps, docs, tests, release metadata, config conventions. | Split independent inspectors where useful. | Run affected checks, report unrelated findings separately, update docs/notes if conventions change. |
 | Ambiguous | Ask one concise clarifying question, or proceed with an explicit low-risk assumption. | Do not load extra workflow beyond what is needed to clarify. | Do not delegate into unclear requirements. | No edits until scope is safe; reclassify after clarification. |
 
@@ -65,6 +67,7 @@ Bucket-specific defaults:
 | Light Ops | Usually direct; read-only reviewer/validator delegation is free when useful. |
 | Script | For non-trivial scripts, use one implementer or one reviewer; avoid competing edits to the same file. |
 | Research | Use 2-3 parallel researchers when scope permits: upstream docs/source, local repo/context, and prior Obsidian/organization knowledge. |
+| Planning | Use read-only explorers/researchers to gather context and pressure-test candidate approaches in parallel; parent owns the plan and user dialogue. |
 | App Code | Read-only reviewers and test-shape inspectors are free; use implementer subagents for independent modules only. |
 | Debug | Freely use at least one read-only investigator for unclear bugs: repro/logs vs code-path/config inspection. |
 | Heavy Ops | Freely parallelize read-only discovery, risk review, and validation-plan review; keep destructive actions in the parent session. |

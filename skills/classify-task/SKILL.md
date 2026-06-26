@@ -29,6 +29,7 @@ classified task in this conversation.
 | Script | Single-file glue/automation/hook/cron/LaunchAgent/local service, no app harness | Define input/output/exit codes/idempotency/side effects -> inspect runtime conventions -> minimal edit -> syntax check + safe smoke test. |
 | Debug | Bug report, failing test, stack trace, unexpected behavior | Reproduce/observe exact failure -> name falsifiable hypotheses -> inspect/instrument -> fix cause -> verify exact failure is gone. |
 | Research | How does X work, compare options, repo exploration, no code change | State question/evidence bar -> read sources/notes -> report facts, assumptions, recommendation, confidence, risks, next checks. |
+| Planning | Plan how we'd do X, lay out an approach/spec/roadmap before building; intent to build but no execution yet | State goal/assumptions/unknowns/success criteria -> consult notes -> propose 2-3 approaches -> author sequenced verifiable plan -> user approval -> write plan note. Default stop; promote to an execution bucket on go-ahead. |
 | Repo-maintenance | Dependency/CI/docs/tests/release/config hygiene | Check status/diff -> inspect affected convention -> edit surgically -> run affected validation -> update docs/notes if conventions changed. |
 | Ambiguous | Multiple buckets fit or scope changes tool choice | Ask one concise clarifying question, or proceed only with an explicit low-risk assumption. |
 
