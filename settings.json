@@ -78,6 +78,7 @@
       "mcp__docker_gateway__mcp_create_profile"
     ]
   },
+  "model": "claude-fable-5[1m]",
   "hooks": {
     "SessionStart": [
       {
@@ -152,5 +153,5 @@
     }
   },
   "tui": "fullscreen",
-  "model": "claude-fable-5[1m]"
+  "skipWorkflowUsageWarning": true
 }
