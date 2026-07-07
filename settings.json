@@ -78,7 +78,6 @@
       "mcp__docker_gateway__mcp_create_profile"
     ]
   },
-  "model": "claude-fable-5[1m]",
   "hooks": {
     "SessionStart": [
       {
