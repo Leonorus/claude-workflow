@@ -152,5 +152,6 @@
     }
   },
   "tui": "fullscreen",
-  "skipWorkflowUsageWarning": true
+  "skipWorkflowUsageWarning": true,
+  "model": "claude-fable-5[1m]"
 }
